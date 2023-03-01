@@ -2,14 +2,14 @@ package tdd;
 
 import tdd.consommables.PotionMagique;
 
-public class Adventure1 {
+public class Adventure1 extends Adventure {
 
     /**
      * méthode à implémenter
      * @param hero le hero de l'aventure
      * @param inventaire l'inventaire du héro
      */
-    public void launch(Hero hero, Inventaire inventaire) {
+    public void aventure(Hero hero, Inventaire inventaire) {
         hero.fouiller();
         hero.avancer();
 

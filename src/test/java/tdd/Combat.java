@@ -52,7 +52,7 @@ public class Combat {
     public void fin() {
 
             // calculer et afficher les caracterisqitques du hero
-            debug("Hero : force:"+hero.force+" endurence:"+hero.endurance+" agilite:"+hero.agilite+" intelligence:"+hero.intelligence);
+            debug("Hero : force:"+hero.force+" endurance:"+hero.endurance+" agilite:"+hero.agilite+" intelligence:"+hero.intelligence);
 
             //saveLigne(lignesHero, "total", carac.attaqueDistance, carac.attaqueTotale, carac.defense, carac.vitesse);
             for(CaracteristiqueDeCombat carac: caracHero) {

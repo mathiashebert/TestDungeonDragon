@@ -9,7 +9,7 @@ public class Adventure3 extends Adventure {
      * @param hero le hero de l'aventure
      * @param inventaire l'inventaire du héro
      */
-    public void launch(Hero hero, Inventaire inventaire) {
+    public void aventure(Hero hero, Inventaire inventaire) {
         hero.fouiller();
         hero.avancer();
 

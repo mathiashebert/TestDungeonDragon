@@ -103,7 +103,7 @@ public class AdventureTest {
         }
 
         info(scenario.getScene().message); // message d'intro
-        adventure.launch(hero, inventaire);
+        adventure.aventure(hero, inventaire);
     }
 
 

@@ -10,30 +10,30 @@ Au début de la méthode, utiliser le code `hero.fouiller();` pour fouiller la p
 Avant cela, si vous tentez d'utiliser la méthode `inventaire.epee()`, le test échouera. Après avoir trouvé l'épée, cela renverra une instance de la classe  `Epee`.
 Puis pour passer à la position suivante, utiliser le code `hero.avancer();`.
 
-Sur la position 1, il y a un ennemi. Vous ne pouvez pas effectuez d'action dans que l'ennemi est là.
-Pour combattre l'ennemi, utilisez la mzethode combattre du hero, comme ceci: `hero.combattre(inventaire.epee().frapper());`
-La methode `combattre` du hero prend en paramettre un tableau d'éléments `Mouvement`. Les mouvements sont des objets retrounés notemments par des méthodes de votre inventaire, comme l'épée.
-En combat, les mouvements vous font gagner de l'attaque et de la défense, et reçoivent un bonus selon la force et l'endurence du héro.
-Pour l'instant, le héro a une force de 1 et une endurence de 1, l'épée a une attaque de 1 et une défense de 1, donc vous avez une attaque de 2 et une defense de 2.
+Sur la position 1, il y a un ennemi. Vous ne pouvez pas effectuer d'action tant que l'ennemi est là.
+Pour combattre l'ennemi, utilisez la methode "combattre" du hero, comme ceci: `hero.combattre(inventaire.epee().frapper());`
+La methode `combattre` du hero prend en paramettre un tableau d'éléments `Mouvement`. Les mouvements sont des objets retrounés notamment par des objets de votre inventaire, comme l'épée.
+En combat, les mouvements vous font gagner de l'attaque et de la défense, et reçoivent un bonus selon la force et l'endurance du héro.
+Pour l'instant, le héro a une force de 1 et une endurance de 1, l'épée a une attaque de 1 et une défense de 1, donc vous avez une attaque de 2 et une defense de 2.
 Le squelette a une attaque de 1 et une defense de 1.
 Pour gagner, vous devez avoir une attaque supérieure à la défense de l'ennemi, et une défense supérieure à l'attaque de l'ennemi.
-Reférez-vous à la section Combat du Readme, pour tout connaître sur le sujet.
-Après avoir combattu le squelette, pensez à fouiller la position 1, puis passer à la position suivante.
+Reférez-vous à la section "Combat" du Readme, pour tout connaître sur le sujet.
+Après avoir combattu le squelette, pensez à fouiller la position 1, puis à passer à la position suivante.
 
 Sur la position 2, il y a un ennemi plus puissant. Le groupe de zombies à une attaque de 4 et une defense de 4, et une vitesse de 0.
 Le hero a une agilité de base de 1, ce qui lui donne un avantage de vitesse de 1 par rapport au zombie.
-Pour chaque point d'avantage de vitesse, le hero peut utiliser un mouvement "jeter" en paramètre de la méthode "combattre()".
-En plus des mouvements "jeter", le hero ne peut utiliser que jusqu'à 2 mouvements "frapper" et/ou "combattre"
-La lance a attaque:2 defense:0, et le bouclier a attaque:0 et defense:2
+Pour chaque point d'avantage de vitesse, le hero peut utiliser un mouvement "jeter" en paramètre de la méthode "combattre".
+En plus des mouvements "jeter", le hero ne peut utiliser jusqu'à 2 mouvements "frapper" et/ou "combattre"
+La lance a attaque:2 et defense:0 ; et le bouclier a attaque:0 et defense:2
 Lorsque vous utilisez un mouvement "jeter", son attaque est majorée par la force du héro.
-Lorsque vous utilisez un mouvement "frapper", son attaque est majorée par la force du héro, et sa défense est majorée par l'endurence du héro.
-Lorsque vous utilisez un mouvement "bloquer", sa défense est majorée par l'endurence du héro.
+Lorsque vous utilisez un mouvement "frapper", son attaque est majorée par la force du héro, et sa défense est majorée par l'endurance du héro.
+Lorsque vous utilisez un mouvement "bloquer", sa défense est majorée par l'endurance du héro.
 Pour vaincre les zombies, utilisez le code `hero.combattre(inventaire.lance().jeter(), inventaire.epee().frapper(), inventaire.bouclier().bloquer());`
 Pensez toujours à fouiller après un combat. Cela vous permettra de trouver de nouveaux objets pour votre inventaire, mais aussi de récupérer les armes jetées.
 Sur la position 2, vous trouverez une potion, une rune, et un livre : le manuel de l'aventurier.
-Les potions permettent d'améliorer les caractéristiques du hero, vous pouvez par exemple utiliser `inventaire.potion().boire(Choix.AGILITE);` pour améliorer l'agilité du héro de un point (pour avori un meilleur avantage de vitesse en combat)
+Les potions permettent d'améliorer les caractéristiques du hero, vous pouvez par exemple utiliser `inventaire.potion().boire(Choix.AGILITE);` pour améliorer l'agilité du héro de 1 point (pour avoir un meilleur avantage de vitesse en combat)
 Les runes permettent d'améliorer les armes du hero, vous pouvez par exemple utiliser `inventaire.rune().graver(inventaire.lance());` pour améliorer la lance (elle aura alors une attaque de 4, au lieu de 2)
-Les livres proposent des méthodes qui renvoies des mouvements (comme les armes). A chaque utilisation d'un livre, les effets sont de plus en plus efficaces. Ils vous permettront peu à peu de développer une strategie.
+Les livres proposent des méthodes qui renvoient des mouvements (comme les armes). A chaque utilisation d'un livre, les effets sont de plus en plus efficaces. Ils vous permettront peu à peu de développer une strategie.
 Vous ne pouvez utiliser qu'une seul mouvement de "livre", à chaque combat.
 
 
