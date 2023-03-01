@@ -88,7 +88,7 @@ public class AdventureTest {
 
     @BeforeAll
     public static void beforeAll() {
-        run(new Adventure2());
+        run(new Adventure());
     }
 
     public static void run(Adventure adventure) {
