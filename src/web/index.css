@@ -1,0 +1,152 @@
+body {
+}
+
+.levels {
+    width: 10vw;
+    position: absolute;
+    overflow: hidden;
+    height: 100vh;
+    top: 0;
+    left: 90vw;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.level {
+    height: 7vh;
+    width: 7vh;
+    border-radius: 50%;
+    margin: auto;
+    border: black 2px solid;
+
+}
+
+.plateau {
+    width: 88vw;
+    height: 98vh;
+    padding: 1vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: scroll;
+}
+
+.section {
+    background: lightgrey;
+    padding: 1vh;
+    margin-bottom: 1vh;
+    overflow: scroll;
+    white-space: nowrap;
+}
+
+.section.success {
+    color: green;
+}
+.section.fail {
+    color: red;
+}
+
+.combat {
+    min-height: 8vh;
+
+    white-space: nowrap;
+    overflow: scroll;
+}
+
+.actions {
+    min-width: 1vh;
+    height: 9vh;
+    margin-right: 1vh;
+    margin-bottom: 1vh;
+    border-radius: 0.5vh;
+
+    /*display: inline-block;*/
+}
+
+.actions#technique {
+    background: gold;
+}
+.actions#sort {
+    background: pink;
+}
+.actions#jeter {
+    background: darkseagreen;
+}
+.actions#frapper {
+    background: indianred;
+}
+.actions#bloquer {
+    background: cornflowerblue;
+}
+
+.action {
+    display: inline-block;
+    margin: 0.5vh 0vh 0.5vh 0.5vh;
+
+    background: #FFFFFF66;
+    height: 7vh;
+    width: 7vh;
+    border-radius: 0.5vh;
+
+    transition-property: all;
+    transition-duration: 1s;
+    transition-delay: 0s;
+}
+.action:last-child {
+    margin-right: 0.5vh;
+}
+.action.en-construction {
+    width: 0vh !important;
+    margin-left: 0vh !important;
+    margin-right: 0vh !important;
+}
+
+.action.assiette.assiette-hover {
+    background: white;
+    box-shadow: white 0px 0px 60px;
+}
+#message {
+    height: 2vh;
+}
+#combat {
+    height: 50vh;
+}
+#resultat {
+    height: 2vh;
+}
+#tresor {
+    height: 9vh;
+}
+#pause {
+    height: 9vh;
+}
+#inventaire {
+    height: 9vh;
+    margin-bottom: 0;
+}
+
+.objet {
+    height: 7vh;
+    width: 7vh;
+    border-radius: 0.5vh;
+}
+.objet.dragging {
+    border: 2px solid red;
+    position: absolute;
+}
+
+.epee {
+    background: url("img/epee.png");
+    background-size: cover;
+}
+
+.lance {
+    background: url("img/lance.avif");
+    background-size: cover;
+}
+
+.bouclier {
+    background: url("img/bouclier.jpeg");
+    background-size: cover;
+}
