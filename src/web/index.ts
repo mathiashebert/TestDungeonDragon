@@ -4,72 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 }, false);
 
-let DRAG : Drag = {
-    drag_offset_x: 0,
-    drag_offset_y: 0,
-    element: undefined
-}
-
-const POSITIONS: Position[] = [
-    {
-        id: "position-1",
-        message: "vous arrivez devant le manoir, armé de votre seule épée. Un squelette garde le portail.",
-        resultat: "",
-        success: false,
-        inventaire: null,
-        combat: [],
-        tresor: {objets:["lance", "bouclier"], nbPotions: 0, nbRunes:0},
-        ennemi: {
-            nom: "le squelette",
-            attaque: 1,
-            defense: 1,
-            vitesse: 1
-        }
-    },
-    {
-        id: "position-2",
-        message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
-        resultat: "Vous devez combattre les zombies",
-        success: false,
-        inventaire: null,
-        combat: [],
-        tresor: {objets:["manuelAventurier"], nbPotions: 1, nbRunes:1},
-        ennemi: {
-            nom: "les zombies",
-            attaque: 4,
-            defense: 4,
-            vitesse: 0
-        }
-    }
-];
-
-let POSITION: Position = POSITIONS[0];
-
-const MOUVEMENTS: Mouvement[] = [
-    {id: "epee_frapper", type: "frapper", objet:"epee", attaque: 1, defense: 1, mana: 0, vitesse: 0, distance: false, feu: false, glace: false},
-    {id: "lance_frapper", type: "frapper", objet:"lance", attaque: 2, defense: 0, mana: 0, vitesse: 0, distance: false, feu: false, glace: false},
-    {id: "lance_jeter", type: "jeter", objet:"lance", attaque: 2, defense: 0, mana: 0, vitesse: 0, distance: true, feu: false, glace: false},
-    {id: "bouclier_bloquer", type: "bloquer", objet:"bouclier", attaque: 0, defense: 2, mana: 0, vitesse: 0, distance: false, feu: false, glace: false},
-]
-
-const OBJETS: Objet[] = [
-    {
-        id: "epee",
-        mouvements: ["epee_frapper"],
-        niveau: 1
-    },
-    {
-        id: "lance",
-        mouvements: ["lance_frapper", "lance_jeter"],
-        niveau: 1
-    },
-    {
-        id: "bouclier",
-        mouvements: ["bouclier_bloquer"],
-        niveau: 1
-    }
-]
-
 interface Drag {
     element : HTMLElement;
     drag_offset_x: number;
@@ -85,6 +19,7 @@ interface Position {
     inventaire: Inventaire;
     tresor: Inventaire;
     ennemi: Ennemi;
+    mouvements: Mouvement[]
 }
 
 interface Ennemi {
@@ -120,6 +55,105 @@ interface Inventaire {
     nbRunes: number;
     nbPotions: number;
 }
+
+class _Position implements Position {
+    combat: string[] = [];
+    ennemi: Ennemi;
+    id: string;
+    inventaire: Inventaire = null;
+    message: string = "";
+    mouvements: Mouvement[] = [];
+    resultat: string = "";
+    success: boolean = false;
+    tresor: Inventaire;
+
+    constructor(id: string) {
+        this.id = id;
+    }
+
+}
+
+class _Mouvement implements Mouvement {
+    attaque: number = 0;
+    defense: number = 0;
+    distance: boolean = false;
+    feu: boolean = false;
+    glace: boolean = false;
+    id: string;
+    mana: number = 0;
+    objet: string;
+    type: string;
+    vitesse: number = 0;
+
+    constructor(id: string, type: string, objet: string) {
+        this.id = id;
+        this.type = type;
+        this.objet = objet;
+    }
+
+}
+
+
+let DRAG : Drag = {
+    drag_offset_x: 0,
+    drag_offset_y: 0,
+    element: undefined
+}
+
+const POSITIONS: Position[] = [
+    {
+        ... new _Position("position-1"),
+        message: "vous arrivez devant le manoir, armé de votre seule épée. Un squelette garde le portail.",
+        tresor: {objets:["lance", "bouclier"], nbPotions: 0, nbRunes:0},
+        ennemi: {
+            nom: "le squelette",
+            attaque: 1,
+            defense: 1,
+            vitesse: 1
+        },
+    },
+    {
+        ... new _Position("position-2"),
+        message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
+        tresor: {objets:["manuelAventurier"], nbPotions: 1, nbRunes:1},
+        ennemi: {
+            nom: "les zombies",
+            attaque: 4,
+            defense: 4,
+            vitesse: 0
+        },
+    }
+];
+
+let POSITION: Position = POSITIONS[0];
+
+const MOUVEMENTS: Mouvement[] = [
+    {... new _Mouvement("epee_frapper", "frapper", "epee"), attaque: 1, defense: 1},
+    {... new _Mouvement("lance_frapper", "frapper", "lance"), attaque: 2},
+    {... new _Mouvement("lance_jeter", "jeter", "lance"), attaque: 2, distance: true},
+    {... new _Mouvement("bouclier_bloquer", "bloquer", "bouclier"), defense: 2}
+]
+
+const OBJETS: Objet[] = [
+    {
+        id: "epee",
+        mouvements: ["epee_frapper"],
+        niveau: 1
+    },
+    {
+        id: "lance",
+        mouvements: ["lance_frapper", "lance_jeter"],
+        niveau: 1
+    },
+    {
+        id: "bouclier",
+        mouvements: ["bouclier_bloquer"],
+        niveau: 1
+    }
+]
+
+
+
 
 window.oncontextmenu = function() {
     return false;
@@ -295,7 +329,8 @@ function dessinerPosition() {
 
     for(let m of POSITION.combat) {
         const mouvement: Mouvement = trouverMouvement(m);
-        const fantome = ajouterObjet(mouvement.objet, true, mouvement)
+        const effetMouvement: Mouvement = trouverMouvementDansPosition(POSITION, m);
+        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement)
         switch (mouvement.type) {
             case 'technique': technique.prepend(fantome); break;
             case 'sort': sort.prepend(fantome); break;
@@ -341,9 +376,11 @@ function recalculerAventure() {
             bloquer: 0
         }
 
+        position.mouvements = [];
 
         if(position.combat.length === 0) {
             position.resultat = "Vous devez combattre "+ennemi.nom;
+            position.success = false;
         } else {
             // resoudre le combat
 
@@ -354,41 +391,35 @@ function recalculerAventure() {
                     const objet = trouverObjet(mouvement.objet);
                     utilisations[mouvement.type] ++;
 
-                    // enlever les objets utilisés de l'inventaire
-                    enleverDuTableau(position.inventaire.objets, mouvement.objet);
-
                     // vérifier qu'on utilise un objet une seule fois
                     if(references.indexOf(mouvement.objet) > -1) {
                         continue;
                     }
                     references.push(mouvement.objet);
 
+                    // vérifier que l'objet est disponibles ?
+
+
+                    // enlever les objets utilisés de l'inventaire
+                    enleverDuTableau(position.inventaire.objets, mouvement.objet);
+
                     // ajouter l'attaque
-                    let attaque = mouvement.attaque * objet.niveau;
-                    let defense = mouvement.defense * objet.niveau;
-                    let vitesse = mouvement.vitesse * objet.niveau;
-                    let mana = mouvement.mana * objet.niveau;
+                    const effetMouvement: Mouvement = calculerEffetMouvement(mouvement, hero);
+                    position.mouvements.push(effetMouvement);
 
-                    if(mouvement.type === 'jeter' || mouvement.type === 'frapper') {
-                        attaque += hero.force;
+                    if(effetMouvement.distance) {
+                        caracteristique.attaqueDistance += effetMouvement.attaque;
                     }
-                    if(mouvement.type === 'bloquer' || mouvement.type === 'frapper') {
-                        defense += hero.endurance;
-                    }
-
-                    if(mouvement.distance) {
-                        caracteristique.attaqueDistance += attaque;
-                    }
-                    caracteristique.attaque += attaque;
-                    caracteristique.defense += defense;
-                    caracteristique.vitesse += vitesse;
-                    caracteristique.mana += mana;
+                    caracteristique.attaque += effetMouvement.attaque;
+                    caracteristique.defense += effetMouvement.defense;
+                    caracteristique.vitesse += effetMouvement.vitesse;
+                    caracteristique.mana += effetMouvement.mana;
 
                     if(mouvement.feu) {
-                        ennemi.defense -= (attaque+defense);
+                        ennemi.defense -= (effetMouvement.attaque + effetMouvement.defense);
                     }
                     if(mouvement.glace) {
-                        ennemi.attaque -= (attaque+defense);
+                        ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
                     }
 
                 }
@@ -472,6 +503,14 @@ function trouverMouvement(id: string): Mouvement {
     }
     return null;
 }
+function trouverMouvementDansPosition(position: Position, id: string): Mouvement {
+    for(let mouvement of position.mouvements) {
+        if(mouvement.id === id) {
+            return mouvement;
+        }
+    }
+    return null;
+}
 
 function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement): HTMLDivElement {
     const fantome = document.createElement('div');
@@ -482,8 +521,47 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement)
     objet.classList.add(classe);
     if(deplacable) {
         objet.classList.add('deplacable');
-    } if(mouvement) {
+    }
+    if(mouvement) {
         objet.setAttribute("tdd-mouvement", mouvement.id);
+
+        // ajouter les marqueurs indicatifs visuels du mouvement
+        const marqueurs = document.createElement('div');
+        marqueurs.classList.add("marqueurs");
+        fantome.append(marqueurs);
+
+        if(mouvement.attaque > 0) {
+            const marqueur = document.createElement('div');
+            marqueur.classList.add("marqueur");
+            marqueur.classList.add("marqueur-attaque");
+            marqueur.innerHTML = String(mouvement.attaque);
+            marqueurs.append(marqueur);
+        }
+
+        if(mouvement.defense > 0) {
+            const marqueur = document.createElement('div');
+            marqueur.classList.add("marqueur");
+            marqueur.classList.add("marqueur-defense");
+            marqueur.innerHTML = String(mouvement.defense);
+            marqueurs.append(marqueur);
+        }
+
+        if(mouvement.vitesse > 0) {
+            const marqueur = document.createElement('div');
+            marqueur.classList.add("marqueur");
+            marqueur.classList.add("marqueur-vitesse");
+            marqueur.innerHTML = String(mouvement.vitesse);
+            marqueurs.append(marqueur);
+        }
+
+        if(mouvement.mana > 0) {
+            const marqueur = document.createElement('div');
+            marqueur.classList.add("marqueur");
+            marqueur.classList.add("marqueur-mana");
+            marqueur.innerHTML = String(mouvement.mana);
+            marqueurs.append(marqueur);
+        }
+
     }
     fantome.append(objet);
     return fantome;
@@ -511,4 +589,29 @@ function enleverDuTableau(tableau: string[], element: string) {
     if (index > -1) {
         tableau.splice(index, 1);
     }
+}
+
+function calculerEffetMouvement(mouvement: Mouvement, hero): Mouvement {
+    const objet: Objet = trouverObjet(mouvement.objet);
+
+    let attaque = mouvement.attaque * objet.niveau;
+    let defense = mouvement.defense * objet.niveau;
+    let vitesse = mouvement.vitesse * objet.niveau;
+    let mana = mouvement.mana * objet.niveau;
+
+    if(mouvement.type === 'jeter' || mouvement.type === 'frapper') {
+        attaque += hero.force;
+    }
+    if(mouvement.type === 'bloquer' || mouvement.type === 'frapper') {
+        defense += hero.endurance;
+    }
+
+    const effetMouvement: Mouvement = {...mouvement};
+
+    effetMouvement.attaque = attaque;
+    effetMouvement.defense = defense;
+    effetMouvement.vitesse = vitesse;
+    effetMouvement.mana = mana;
+
+    return effetMouvement;
 }
