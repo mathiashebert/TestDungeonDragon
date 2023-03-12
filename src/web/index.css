@@ -88,10 +88,10 @@ body {
     height: 7vh;
     width: 7vh;
     border-radius: 0.5vh;
+    opacity: 1;
 
     transition-property: all;
     transition-duration: 1s;
-    transition-delay: 0s;
 }
 .action:last-child {
  /*   margin-right: 1vh;*/
@@ -100,6 +100,10 @@ body {
     width: 0vh !important;
     margin-left: 0vh !important;
     margin-right: 0vh !important;
+    opacity: 0; !important;
+}
+
+.action.assiette {
 }
 
 .action.assiette.assiette-hover {
@@ -110,13 +114,13 @@ body {
     height: 2vh;
 }
 #combat {
-    height: 50vh;
+    height: 40vh;
 }
 #resultat {
     height: 11vh;
 }
 #tresor {
-    height: 0vh;
+    height: 9vh;
 }
 #pause {
     height: 9vh;
@@ -131,7 +135,10 @@ body {
 }
 
 .marqueurs {
-    position: relative;
+    position: absolute;
+    width: 7vh;
+    height: 7vh;
+
 }
 .marqueur {
     display: inline-block;
@@ -186,5 +193,9 @@ body {
 
 .bouclier {
     background: url("img/bouclier.jpeg");
+    background-size: cover;
+}
+.manuelAventurier {
+    background: url("img/grimoire.png");
     background-size: cover;
 }

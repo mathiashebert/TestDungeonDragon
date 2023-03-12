@@ -10,11 +10,18 @@ interface Drag {
     drag_offset_y: number;
 }
 
+interface ResultatCombat {
+    message: string;
+    hero: Hero;
+    caracteristiqueHero: Caracteristique,
+    caracteristiqueEnnemi: Caracteristique
+}
+
 interface Position {
     id: string;
     message: string;
     combat: string[];
-    resultat: string;
+    resultat: ResultatCombat;
     success: boolean;
     inventaire: Inventaire;
     tresor: Inventaire;
@@ -56,6 +63,21 @@ interface Inventaire {
     nbPotions: number;
 }
 
+interface Hero {
+    force: number;
+    endurance: number;
+    vitesse: number;
+    mana: number;
+}
+
+interface Caracteristique {
+    attaqueDistance: number,
+    attaque: number,
+    defense: number,
+    mana: number,
+    vitesse: number
+}
+
 class _Position implements Position {
     combat: string[] = [];
     ennemi: Ennemi;
@@ -63,7 +85,12 @@ class _Position implements Position {
     inventaire: Inventaire = null;
     message: string = "";
     mouvements: Mouvement[] = [];
-    resultat: string = "";
+    resultat: ResultatCombat = {
+        message: "",
+        hero: {force: 1, endurance: 1, vitesse: 1, mana: 1},
+        caracteristiqueHero: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0},
+        caracteristiqueEnnemi: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0}
+    };
     success: boolean = false;
     tresor: Inventaire;
 
@@ -117,10 +144,21 @@ const POSITIONS: Position[] = [
         message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
         tresor: {objets:["manuelAventurier"], nbPotions: 1, nbRunes:1},
         ennemi: {
-            nom: "les zombies",
+            nom: "le zombie",
             attaque: 4,
             defense: 4,
             vitesse: 0
+        },
+    },
+    {
+        ... new _Position("position-3"),
+        message: "Vous entrez une petite salle remplie de toilles d'areignées. Une areignée géante vénimeuse vous tombe soudain dessus.",
+        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        ennemi: {
+            nom: "l'areiegnée",
+            attaque: 6,
+            defense: 4,
+            vitesse: 1
         },
     }
 ];
@@ -128,6 +166,11 @@ const POSITIONS: Position[] = [
 let POSITION: Position = POSITIONS[0];
 
 const MOUVEMENTS: Mouvement[] = [
+    {... new _Mouvement("manuelAventurier_positionAggressive", "technique", "manuelAventurier"), attaque: 1},
+    {... new _Mouvement("manuelAventurier_positionDefensive", "technique", "manuelAventurier"), defense: 1},
+    {... new _Mouvement("manuelAventurier_reflexes", "technique", "manuelAventurier"), vitesse: 1},
+    {... new _Mouvement("manuelAventurier_concentration", "technique", "manuelAventurier"), mana: 1},
+
     {... new _Mouvement("epee_frapper", "frapper", "epee"), attaque: 1, defense: 1},
     {... new _Mouvement("lance_frapper", "frapper", "lance"), attaque: 2},
     {... new _Mouvement("lance_jeter", "jeter", "lance"), attaque: 2, distance: true},
@@ -148,6 +191,11 @@ const OBJETS: Objet[] = [
     {
         id: "bouclier",
         mouvements: ["bouclier_bloquer"],
+        niveau: 1
+    },
+    {
+        id: "manuelAventurier",
+        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
         niveau: 1
     }
 ]
@@ -236,10 +284,9 @@ window.onload = function() {
         if (!DRAG.element) return;
 
         let assiettes = document.getElementsByClassName("assiette-hover");
-        for(let i = 0; i < assiettes.length; i++) {
-            const o = assiettes.item(i);
+        if(assiettes.length > 0) {
+            const o = assiettes.item(0);
             mettreDansAssiette(DRAG.element, o);
-            break;
         }
 
 
@@ -291,8 +338,29 @@ function dessinerPosition() {
     const message = document.getElementById('message');
     message.innerHTML = POSITION.message;
 
+    // ecrire le resultat
     const resultat = document.getElementById('resultat');
-    resultat.innerHTML = POSITION.resultat;
+    const resultatMessage = document.getElementById('resultat-message');
+    const resultatHero = document.getElementById('resultat-hero');
+    const caracteristiqueHero = document.getElementById('caracteristique-hero');
+    const caracteristiqueEnnemi = document.getElementById('caracteristique-ennemi');
+    resultatMessage.innerHTML = POSITION.resultat.message;
+    resultatHero.innerHTML =
+        "HERO force:"+POSITION.resultat.hero.force +
+        " endurance:"+POSITION.resultat.hero.endurance +
+        " vitesse:"+POSITION.resultat.hero.vitesse +
+        " mana:"+POSITION.resultat.hero.mana;
+    caracteristiqueHero.innerHTML =
+        "attaque à distance:"+POSITION.resultat.caracteristiqueHero.attaqueDistance +
+        " attaque:"+POSITION.resultat.caracteristiqueHero.attaque +
+        " defense:"+POSITION.resultat.caracteristiqueHero.defense +
+        " vitesse:"+POSITION.resultat.caracteristiqueHero.vitesse +
+        " mana:"+POSITION.resultat.caracteristiqueHero.mana;
+    caracteristiqueEnnemi.innerHTML =
+        " attaque:"+POSITION.resultat.caracteristiqueEnnemi.attaque +
+        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense +
+        " vitesse:"+POSITION.resultat.caracteristiqueEnnemi.vitesse;
+
     if(POSITION.success) {
         resultat.classList.remove("fail");
         resultat.classList.add("success");
@@ -315,17 +383,15 @@ function dessinerPosition() {
     }
 
     // dessiner le combat
-    var technique = document.getElementById('technique');
-    var sort = document.getElementById('sort');
-    var jeter = document.getElementById('jeter');
-    var frapper = document.getElementById('frapper');
-    var bloquer = document.getElementById('bloquer');
+    const technique = document.getElementById('technique');
+    const sort = document.getElementById('sort');
+    const jeter = document.getElementById('jeter');
+    const frapper = document.getElementById('frapper');
 
     technique.innerHTML='';
     sort.innerHTML='';
     jeter.innerHTML='';
     frapper.innerHTML='';
-    bloquer.innerHTML='';
 
     for(let m of POSITION.combat) {
         const mouvement: Mouvement = trouverMouvement(m);
@@ -336,7 +402,7 @@ function dessinerPosition() {
             case 'sort': sort.prepend(fantome); break;
             case 'jeter': jeter.prepend(fantome); break;
             case 'frapper': frapper.prepend(fantome); break;
-            case 'bloquer': bloquer.prepend(fantome); break;
+            case 'bloquer': frapper.prepend(fantome); break;
         }
     }
 
@@ -347,25 +413,36 @@ function dessinerPosition() {
 function recalculerAventure() {
     const inventaire: Inventaire = {objets:["epee"], nbRunes: 0, nbPotions: 0};
 
-    const hero = {
+    const hero: Hero = {
         force: 1,
         endurance: 1,
-        agilite: 1,
-        intelligence: 1
+        vitesse: 1,
+        mana: 1
     };
 
     for(let position of POSITIONS) {
         position.inventaire = {objets:[...inventaire.objets], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
 
-        const caracteristique = {
+        const caracteristique: Caracteristique = {
             attaqueDistance: 0,
             attaque: 0,
             defense: 0,
-            mana: hero.intelligence,
-            vitesse: hero.agilite
+            mana: hero.mana,
+            vitesse: hero.vitesse
         }
 
-        const ennemi = {...position.ennemi};
+        const ennemi: Caracteristique = {
+            attaqueDistance: 0,
+            attaque: position.ennemi.attaque,
+            defense: position.ennemi.defense,
+            mana: 0,
+            vitesse: position.ennemi.vitesse
+        };
+        const nomEnnemi = position.ennemi.nom;
+
+        position.resultat.caracteristiqueHero = caracteristique;
+        position.resultat.caracteristiqueEnnemi = ennemi;
+
         const references = [];
 
         const utilisations = {
@@ -378,8 +455,10 @@ function recalculerAventure() {
 
         position.mouvements = [];
 
+        position.resultat.hero = {... hero};
+
         if(position.combat.length === 0) {
-            position.resultat = "Vous devez combattre "+ennemi.nom;
+            position.resultat.message = "Vous devez combattre "+nomEnnemi;
             position.success = false;
         } else {
             // resoudre le combat
@@ -388,7 +467,6 @@ function recalculerAventure() {
                 if(position.combat.indexOf(mouvement.id) > -1) {
                     console.log(mouvement);
 
-                    const objet = trouverObjet(mouvement.objet);
                     utilisations[mouvement.type] ++;
 
                     // vérifier qu'on utilise un objet une seule fois
@@ -431,36 +509,36 @@ function recalculerAventure() {
             if(initiative <= 0) initiative = 0;
 
             if(utilisations.bloquer + utilisations.frapper > 2) {
-                position.resultat = "Vous n'avez que 2 mains, vous ne pouvez utiliser que 2 mouvements bloquer et/ou frapper";
+                position.resultat.message = "Vous n'avez que 2 mains, vous ne pouvez utiliser que 2 mouvements de mélée";
                 position.success = false;
             } else if(utilisations.technique > 1) {
-                position.resultat = "Vous ne pouvez utiliser qu'une seule tehcnique";
+                position.resultat.message = "Vous ne pouvez utiliser qu'une seule technique";
                 position.success = false;
             } else if(utilisations.jeter > 0 && initiative <= 0) {
-                position.resultat = "Vous n'êtes pas assez rapide, vous ne pouvez rien jeter";
+                position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez rien jeter";
                 position.success = false;
             } else if(initiative < utilisations.jeter) {
-                position.resultat = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+initiative+" mouvement jeter";
+                position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+initiative+" mouvement jeter";
                 position.success = false;
             }
 
             else if(caracteristique.attaqueDistance > ennemi.defense) {
-                position.resultat = "Vous écrasez "+ennemi.nom;
+                position.resultat.message = "Vous écrasez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.defense <= 0) {
-                position.resultat = "Vous carbonisez "+ennemi.nom;
+                position.resultat.message = "Vous carbonisez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.attaque <= 0) {
-                position.resultat = "Vous congelez "+ennemi.nom;
+                position.resultat.message = "Vous congelez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.attaque >= caracteristique.defense) {
-                position.resultat = ennemi.nom + " a une attaque trop forte";
+                position.resultat.message = nomEnnemi + " a une attaque trop forte";
                 position.success = false;
             } else if(ennemi.defense >= caracteristique.attaque) {
-                position.resultat = ennemi.nom + " a une defense trop forte";
+                position.resultat.message = nomEnnemi + " a une defense trop forte";
                 position.success = false;
             } else {
-                position.resultat = "Vous écrasez "+ennemi.nom;
+                position.resultat.message = "Vous écrasez "+nomEnnemi;
                 position.success = true;
             }
 
@@ -526,41 +604,8 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement)
         objet.setAttribute("tdd-mouvement", mouvement.id);
 
         // ajouter les marqueurs indicatifs visuels du mouvement
-        const marqueurs = document.createElement('div');
-        marqueurs.classList.add("marqueurs");
-        fantome.append(marqueurs);
+        fantome.append(creerMarqueurs(mouvement));
 
-        if(mouvement.attaque > 0) {
-            const marqueur = document.createElement('div');
-            marqueur.classList.add("marqueur");
-            marqueur.classList.add("marqueur-attaque");
-            marqueur.innerHTML = String(mouvement.attaque);
-            marqueurs.append(marqueur);
-        }
-
-        if(mouvement.defense > 0) {
-            const marqueur = document.createElement('div');
-            marqueur.classList.add("marqueur");
-            marqueur.classList.add("marqueur-defense");
-            marqueur.innerHTML = String(mouvement.defense);
-            marqueurs.append(marqueur);
-        }
-
-        if(mouvement.vitesse > 0) {
-            const marqueur = document.createElement('div');
-            marqueur.classList.add("marqueur");
-            marqueur.classList.add("marqueur-vitesse");
-            marqueur.innerHTML = String(mouvement.vitesse);
-            marqueurs.append(marqueur);
-        }
-
-        if(mouvement.mana > 0) {
-            const marqueur = document.createElement('div');
-            marqueur.classList.add("marqueur");
-            marqueur.classList.add("marqueur-mana");
-            marqueur.innerHTML = String(mouvement.mana);
-            marqueurs.append(marqueur);
-        }
 
     }
     fantome.append(objet);
@@ -574,7 +619,15 @@ function ajouterAssiette(mouvement: Mouvement) {
     assiette.classList.add('en-construction');
     if(mouvement) {
         assiette.setAttribute("tdd-mouvement", mouvement.id);
-        document.getElementById(mouvement.type).prepend(assiette);
+        let type = mouvement.type;
+        if(type === 'bloquer') {
+            type = 'frapper';
+        }
+        document.getElementById(type).prepend(assiette);
+
+        const effetMouvement = calculerEffetMouvement(mouvement, POSITION.resultat.hero);
+        assiette.append(creerMarqueurs(effetMouvement));
+
     } else {
         document.getElementById("inventaire").prepend(assiette);
     }
@@ -614,4 +667,43 @@ function calculerEffetMouvement(mouvement: Mouvement, hero): Mouvement {
     effetMouvement.mana = mana;
 
     return effetMouvement;
+}
+
+function creerMarqueurs(mouvement: Mouvement): HTMLDivElement {
+    const marqueurs = document.createElement('div');
+    marqueurs.classList.add("marqueurs");
+
+    if(mouvement.attaque > 0) {
+        const marqueur = document.createElement('div');
+        marqueur.classList.add("marqueur");
+        marqueur.classList.add("marqueur-attaque");
+        marqueur.innerHTML = String(mouvement.attaque);
+        marqueurs.append(marqueur);
+    }
+
+    if(mouvement.defense > 0) {
+        const marqueur = document.createElement('div');
+        marqueur.classList.add("marqueur");
+        marqueur.classList.add("marqueur-defense");
+        marqueur.innerHTML = String(mouvement.defense);
+        marqueurs.append(marqueur);
+    }
+
+    if(mouvement.vitesse > 0) {
+        const marqueur = document.createElement('div');
+        marqueur.classList.add("marqueur");
+        marqueur.classList.add("marqueur-vitesse");
+        marqueur.innerHTML = String(mouvement.vitesse);
+        marqueurs.append(marqueur);
+    }
+
+    if(mouvement.mana > 0) {
+        const marqueur = document.createElement('div');
+        marqueur.classList.add("marqueur");
+        marqueur.classList.add("marqueur-mana");
+        marqueur.innerHTML = String(mouvement.mana);
+        marqueurs.append(marqueur);
+    }
+
+    return marqueurs;
 }
