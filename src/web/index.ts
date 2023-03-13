@@ -338,18 +338,18 @@ function dessinerPosition() {
     const message = document.getElementById('message');
     message.innerHTML = POSITION.message;
 
+    // écrire les attributs
+    document.getElementById("attribut-force").innerHTML = String(POSITION.resultat.hero.force);
+    document.getElementById("attribut-endurance").innerHTML = String(POSITION.resultat.hero.endurance);
+    document.getElementById("attribut-vitesse").innerHTML = String(POSITION.resultat.hero.vitesse);
+    document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.mana);
+
     // ecrire le resultat
     const resultat = document.getElementById('resultat');
     const resultatMessage = document.getElementById('resultat-message');
-    const resultatHero = document.getElementById('resultat-hero');
     const caracteristiqueHero = document.getElementById('caracteristique-hero');
     const caracteristiqueEnnemi = document.getElementById('caracteristique-ennemi');
     resultatMessage.innerHTML = POSITION.resultat.message;
-    resultatHero.innerHTML =
-        "HERO force:"+POSITION.resultat.hero.force +
-        " endurance:"+POSITION.resultat.hero.endurance +
-        " vitesse:"+POSITION.resultat.hero.vitesse +
-        " mana:"+POSITION.resultat.hero.mana;
     caracteristiqueHero.innerHTML =
         "attaque à distance:"+POSITION.resultat.caracteristiqueHero.attaqueDistance +
         " attaque:"+POSITION.resultat.caracteristiqueHero.attaque +

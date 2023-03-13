@@ -113,21 +113,26 @@ body {
 #message {
     height: 2vh;
 }
+#attributs {
+}
+/*
+#pause {
+    height: 12vh;
+    top: 6vh;
+    left: 16vw;
+    width: calc(84vw - 17vh);
+}*/
+#inventaire {
+    height: 9vh;
+}
 #combat {
     height: 40vh;
 }
 #resultat {
-    height: 11vh;
+    height: 9vh;
 }
 #tresor {
-    height: 9vh;
-}
-#pause {
-    height: 9vh;
-    width: calc(84vw - 7vh);
-}
-#inventaire {
-    height: 9vh;
+    height: 5vh;
 }
 
 .section:last-child {
@@ -181,6 +186,7 @@ body {
     z-index: 1;
 }
 
+/* inventaire */
 .epee {
     background: url("img/epee.png");
     background-size: cover;
@@ -198,4 +204,44 @@ body {
 .manuelAventurier {
     background: url("img/grimoire.png");
     background-size: cover;
+}
+
+/* attributs du héro */
+.attribut {
+    border: solid 1px black;
+    border-radius: 1vh;
+    height: 2vh;
+    display: block;
+    width: 10vw;
+    text-align: right;
+    padding: 0.5vh;
+    position: relative;
+    margin-bottom: 0.5vh;
+    background: white;
+}
+
+.attribut :first-child {
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 100%;
+    width: 100%;
+}
+.attribut :last-child {
+    display: inline-block;
+    position: absolute;
+    right: 1vw;
+}
+
+.force {
+    background: url("img/force.png");
+}
+.endurance {
+    background: url("img/armure.png");
+}
+.vitesse {
+    background: url("img/vitesse.png");
+}
+.mana {
+    background: url("img/mana.png");
 }
