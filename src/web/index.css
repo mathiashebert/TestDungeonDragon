@@ -22,14 +22,65 @@ body {
 
 }
 
-.plateau {
-    width: 88vw;
+#scene-presentator {
+    width: 90vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: scroll;
+
+    perspective: 1000px;
+}
+
+.double-faced {
+    transform-style: preserve-3d;
+    transition: all 1.0s linear;
+
+}
+.flipped .double-faced {
+    transform: rotateY(180deg);
+
+}
+.face {
+    width: calc(90vw - 2vh);
     height: 98vh;
     padding: 1vh;
     position: absolute;
     top: 0;
     left: 0;
     overflow: scroll;
+    transition: all 1.0s linear;
+    backface-visibility: hidden;
+
+
+}
+#scene-double-card.flipped .plateau {
+}
+.plateau {
+}
+#presentation {
+    transform: rotateY(180deg);
+    background: white;
+    background-position-y: bottom;
+    background-position-x: center;
+    display: flex;
+    flex-direction: column-reverse;
+}
+.continue {
+    text-align: right;
+}
+
+#jeter-marqueur-initiative {
+    width: 1vh;
+    height: 1vh;
+    position: absolute;
+    padding: 1vh;
+    border-radius: 0.5vh;
+    border: solid 1px black;
+    top: 56vh;
+    left: 80vw;
+    background: darkseagreen;
 }
 
 .section {
@@ -113,15 +164,19 @@ body {
 #message {
     height: 2vh;
 }
-#attributs {
-}
-/*
 #pause {
-    height: 12vh;
-    top: 6vh;
-    left: 16vw;
-    width: calc(84vw - 17vh);
-}*/
+    height: 16vh;
+    display: flex;
+}
+#attributs {
+    width: 13vw;
+}
+#pause-actions {
+    width: 13vw;
+
+}
+
+
 #inventaire {
     height: 9vh;
 }
@@ -186,6 +241,35 @@ body {
     z-index: 1;
 }
 
+.evidence {
+    /*overflow: visible;*/
+}
+.evidence::after {
+    box-shadow: rebeccapurple 0px 1vh 1vh;
+    opacity: 0;
+    animation: pulse 2s infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    content: "";
+    animation: pulse 1s infinite;
+
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 /* inventaire */
 .epee {
     background: url("img/epee.png");
@@ -204,6 +288,35 @@ body {
 .manuelAventurier {
     background: url("img/grimoire.png");
     background-size: cover;
+}
+
+.potion {
+    background: url("img/potion.png");
+    background-size: cover;
+}
+.rune {
+    background: url("img/rune.png");
+    background-size: cover;
+}
+
+/* présentation */
+#presentation.skeleton {
+    background-image: url("img/skeleton.jpeg");
+    background-size: cover;
+}
+#presentation.zombie {
+    background-image: url("img/zombie.jpeg");
+    background-size: cover;
+}
+#presentation.spider {
+    background-image: url("img/spider.jpeg");
+    background-size: cover;
+}
+#presentation-message {
+    display: inline-block;
+    background: bisque;
+    border-radius: 2vh;
+    padding: 1vh;
 }
 
 /* attributs du héro */

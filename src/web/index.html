@@ -28,31 +28,47 @@
 
     </div>
 
-    <div class="plateau">
-        <div class="section" id="message"></div>
 
-        <div class="section" id="attributs">
-            <div class="attribut"><span class="force"></span><span id="attribut-force"></span></div>
-            <div class="attribut"><span class="endurance"></span><span id="attribut-endurance"></span></div>
-            <div class="attribut"><span class="vitesse"></span><span id="attribut-vitesse"></span></div>
-            <div class="attribut"><span class="mana"></span><span id="attribut-mana"></span></div>
+    <div id="scene-presentator" class="flipped">
+        <div class="double-faced">
+            <div id="presentation" class="face">
+                <div id="presentation-message"></div>
+            </div>
+            <div class="plateau face">
+                <div class="section" id="message"></div>
+
+                <div class="section" id="pause">
+                    <div id="attributs">
+                        <div class="attribut" tdd-attribut="force"><span class="force"></span><span id="attribut-force"></span></div>
+                        <div class="attribut" tdd-attribut="endurance"><span class="endurance"></span><span id="attribut-endurance"></span></div>
+                        <div class="attribut" tdd-attribut="vitesse"><span class="vitesse"></span><span id="attribut-vitesse"></span></div>
+                        <div class="attribut" tdd-attribut="mana"><span class="mana"></span><span id="attribut-mana"></span></div>
+                    </div>
+                    <div id="pause-actions">
+
+                    </div>
+
+                </div>
+
+                <div class="section" id="inventaire"></div>
+
+                <div class="section" id="combat" tdd-position-id="1">
+                    <div class="actions" id="technique"></div>
+                    <div class="actions" id="sort"></div>
+                    <div class="actions" id="jeter"></div>
+                    <div id="jeter-marqueur-initiative"></div>
+                    <div class="actions" id="frapper"></div>
+                </div>
+
+                <div class="section" id="resultat">
+                    <div id="caracteristique-hero"></div>
+                    <div id="caracteristique-ennemi"></div>
+                    <div id="resultat-message"></div>
+                </div>
+                <div class="section" id="tresor"></div>
+
+            </div>
         </div>
-
-        <div class="section" id="inventaire"></div>
-
-        <div class="section" id="combat" tdd-position-id="1">
-            <div class="actions" id="technique"></div>
-            <div class="actions" id="sort"></div>
-            <div class="actions" id="jeter"></div>
-            <div class="actions" id="frapper"></div>
-        </div>
-
-        <div class="section" id="resultat">
-            <div id="caracteristique-hero"></div>
-            <div id="caracteristique-ennemi"></div>
-            <div id="resultat-message"></div>
-        </div>
-        <div class="section" id="tresor"></div>
 
     </div>
 

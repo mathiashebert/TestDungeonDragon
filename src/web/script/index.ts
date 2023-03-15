@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     recalculerAventure();
     dessinerPosition();
+    choisirPosition("position-1");
 
 }, false);
 
@@ -26,7 +27,8 @@ interface Position {
     inventaire: Inventaire;
     tresor: Inventaire;
     ennemi: Ennemi;
-    mouvements: Mouvement[]
+    mouvements: Mouvement[],
+    presentation: string,
 }
 
 interface Ennemi {
@@ -93,6 +95,7 @@ class _Position implements Position {
     };
     success: boolean = false;
     tresor: Inventaire;
+    presentation: string;
 
     constructor(id: string) {
         this.id = id;
@@ -138,6 +141,7 @@ const POSITIONS: Position[] = [
             defense: 1,
             vitesse: 1
         },
+        presentation: "skeleton",
     },
     {
         ... new _Position("position-2"),
@@ -149,6 +153,7 @@ const POSITIONS: Position[] = [
             defense: 4,
             vitesse: 0
         },
+        presentation: "zombie",
     },
     {
         ... new _Position("position-3"),
@@ -160,6 +165,7 @@ const POSITIONS: Position[] = [
             defense: 4,
             vitesse: 1
         },
+        presentation: "spider",
     }
 ];
 
@@ -219,10 +225,21 @@ window.onload = function() {
 
         const target: any = touchLocation.target;
 
+        if(target?.getAttribute("id") === "presentation") {
+            document.getElementById("scene-presentator").classList.remove("flipped");
+            return;
+        }
+
+        if(target?.getAttribute("id") === "message") {
+            document.getElementById("scene-presentator").classList.add("flipped");
+            return;
+        }
+
         // vérifier si c'est un niveau, qui est cliqué
         if(target?.classList?.contains('level')) {
-            POSITION = trouverPosition(target.getAttribute('id'));
-            dessinerPosition();
+            choisirPosition(target.getAttribute('id'));
+            // POSITION = trouverPosition(target.getAttribute('id'));
+            setTimeout(dessinerPosition, 1000);
             return;
         }
 
@@ -240,15 +257,25 @@ window.onload = function() {
                 o.style.top = (y - DRAG.drag_offset_y) + 'px';
                 DRAG.element = o;
 
-                for(let j = 0; j < o.classList.length; j++) {
-                    const objet = trouverObjet(o.classList.item(j));
+                const objetReference = o.getAttribute("tdd-objet");
+                if(objetReference === 'potion') {
+                    // gérer de pouvoir cibler un attribut
+                    const attributs = document.getElementsByClassName("attribut");
+                    for(let i = 0; i < attributs.length; i++) {
+                        attributs.item(i).classList.add("evidence");
+                    }
+                } else if(objetReference === 'rune') {
+                    // gérer de pouvoir cibler une arme
+
+                } else {
+                    const objet = trouverObjet(objetReference);
                     if(objet) {
                         for(let mouvementId of objet.mouvements) {
                             const mouvement: Mouvement = trouverMouvement(mouvementId);
                             if(o.getAttribute("tdd-mouvement") === mouvement.id) {
                                 ajouterAssiette(null); // si le mouvement est déjà celui selectionné, on ajoute l'assiette dans l'inventaire
                             } else {
-                                ajouterAssiette(mouvement); // sinon on ajoute l'aciette normalement
+                                ajouterAssiette(mouvement); // sinon on ajoute l'assiette normalement
                             }
                         }
                     }
@@ -278,6 +305,18 @@ window.onload = function() {
                 o.classList.remove("assiette-hover");
             }
         }
+
+        const evidences = document.getElementsByClassName("evidence");
+        for(let i = 0; i < evidences.length; i++) {
+            const o = evidences.item(i) as HTMLElement;
+            const rect = o.getBoundingClientRect();
+
+            if( x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                o.classList.add("evidence-hover");
+            } else {
+                o.classList.remove("evidence-hover");
+            }
+        }
     })
 
     body.addEventListener('touchend', function(e) {
@@ -289,6 +328,17 @@ window.onload = function() {
             mettreDansAssiette(DRAG.element, o);
         }
 
+        let evidences = document.getElementsByClassName("evidence-hover");
+        if(evidences.length > 0) {
+            const o = evidences.item(0);
+            choisirEvidence(DRAG.element, o);
+        }
+
+        // retirer les évidences
+        while(document.getElementsByClassName("evidence").length > 0) {
+            const o = document.getElementsByClassName("evidence").item(0);
+            o.classList.remove("evidence");
+        }
 
         // retirer les assiettes
         assiettes = document.getElementsByClassName("assiette");
@@ -304,8 +354,18 @@ window.onload = function() {
 
 }
 
-function mettreDansAssiette(objet, assiette) {
-    console.log("mettre dans assiette");
+function choisirEvidence(objet: Element, evidence: Element) {
+    console.log("choisir evidence", objet, evidence);
+
+    const attribut = evidence.getAttribute("tdd-attribut");
+    if(attribut) {
+
+    }
+
+}
+
+function mettreDansAssiette(objet: Element, assiette: Element) {
+    console.log("mettre dans assiette", objet, assiette);
 
     /*const old_fantome = objet.parentElement;
     old_fantome.classList.add("en-construction");
@@ -336,7 +396,16 @@ function mettreDansAssiette(objet, assiette) {
 
 function dessinerPosition() {
     const message = document.getElementById('message');
-    message.innerHTML = POSITION.message;
+    message.innerHTML = "<- "+POSITION.message;
+
+    const pause = document.getElementById("pause-actions");
+    // ecrire la pause
+    for(let i=0; i<POSITION.inventaire.nbPotions; i++) {
+        pause.append(ajouterObjet('potion', true, null));
+    }
+    for(let i=0; i<POSITION.inventaire.nbRunes; i++) {
+        pause.append(ajouterObjet('rune', true, null));
+    }
 
     // écrire les attributs
     document.getElementById("attribut-force").innerHTML = String(POSITION.resultat.hero.force);
@@ -353,13 +422,10 @@ function dessinerPosition() {
     caracteristiqueHero.innerHTML =
         "attaque à distance:"+POSITION.resultat.caracteristiqueHero.attaqueDistance +
         " attaque:"+POSITION.resultat.caracteristiqueHero.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueHero.defense +
-        " vitesse:"+POSITION.resultat.caracteristiqueHero.vitesse +
-        " mana:"+POSITION.resultat.caracteristiqueHero.mana;
+        " defense:"+POSITION.resultat.caracteristiqueHero.defense;
     caracteristiqueEnnemi.innerHTML =
         " attaque:"+POSITION.resultat.caracteristiqueEnnemi.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense +
-        " vitesse:"+POSITION.resultat.caracteristiqueEnnemi.vitesse;
+        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense;
 
     if(POSITION.success) {
         resultat.classList.remove("fail");
@@ -374,6 +440,12 @@ function dessinerPosition() {
     for(let o of POSITION.tresor.objets) {
         tresor.append(ajouterObjet(o, false, null));
     }
+    for(let i=0; i<POSITION.tresor.nbPotions; i++) {
+        tresor.append(ajouterObjet('potion', false, null));
+    }
+    for(let i=0; i<POSITION.tresor.nbRunes; i++) {
+        tresor.append(ajouterObjet('rune', false, null));
+    }
 
     // dessiner l'inventaire
     const inventaire = document.getElementById('inventaire');
@@ -383,6 +455,9 @@ function dessinerPosition() {
     }
 
     // dessiner le combat
+    const initiative = POSITION.resultat.caracteristiqueHero.vitesse - POSITION.resultat.caracteristiqueEnnemi.vitesse;
+    document.getElementById("jeter-marqueur-initiative").innerHTML = String(initiative);
+
     const technique = document.getElementById('technique');
     const sort = document.getElementById('sort');
     const jeter = document.getElementById('jeter');
@@ -597,6 +672,7 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement)
     const objet = document.createElement('div');
     objet.classList.add('objet');
     objet.classList.add(classe);
+    objet.setAttribute("tdd-objet", classe);
     if(deplacable) {
         objet.classList.add('deplacable');
     }
@@ -605,8 +681,6 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement)
 
         // ajouter les marqueurs indicatifs visuels du mouvement
         fantome.append(creerMarqueurs(mouvement));
-
-
     }
     fantome.append(objet);
     return fantome;
@@ -706,4 +780,11 @@ function creerMarqueurs(mouvement: Mouvement): HTMLDivElement {
     }
 
     return marqueurs;
+}
+
+function choisirPosition(id: string) {
+    POSITION = trouverPosition(id);
+    document.getElementById("scene-presentator").classList.add("flipped");
+    document.getElementById("presentation").className = "face "+POSITION.presentation;
+    document.getElementById("presentation-message").innerHTML = POSITION.message+"<div class='continue'>-></div>";
 }
