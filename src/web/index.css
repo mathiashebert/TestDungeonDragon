@@ -272,30 +272,43 @@ body {
 
 /* inventaire */
 .epee {
-    background: url("img/epee.png");
+    background-image: url("img/epee.png");
     background-size: cover;
 }
 
 .lance {
-    background: url("img/lance.avif");
+    background-image: url("img/lance.avif");
     background-size: cover;
 }
 
 .bouclier {
-    background: url("img/bouclier.jpeg");
+    background-image: url("img/bouclier.jpeg");
     background-size: cover;
 }
 .manuelAventurier {
-    background: url("img/grimoire.png");
+    background-image: url("img/grimoire.png");
     background-size: cover;
 }
 
 .potion {
-    background: url("img/potion.png");
-    background-size: cover;
+    background-image: url("img/potion.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.potion.force {
+    background-image: url("img/potion-force.png");
+}
+.potion.endurance {
+    background-image: url("img/potion-endurance.png");
+}
+.potion.vitesse {
+    background-image: url("img/potion-vitesse.png");
+}
+.potion.mana {
+    background-image: url("img/potion-mana.png");
 }
 .rune {
-    background: url("img/rune.png");
+    background-image: url("img/rune.png");
     background-size: cover;
 }
 
@@ -347,14 +360,14 @@ body {
 }
 
 .force {
-    background: url("img/force.png");
+    background-image: url("img/force.png");
 }
 .endurance {
-    background: url("img/armure.png");
+    background-image: url("img/armure.png");
 }
 .vitesse {
-    background: url("img/vitesse.png");
+    background-image: url("img/vitesse.png");
 }
 .mana {
-    background: url("img/mana.png");
+    background-image: url("img/mana.png");
 }

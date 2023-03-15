@@ -21,14 +21,22 @@ interface ResultatCombat {
 interface Position {
     id: string;
     message: string;
-    combat: string[];
+    combat: string[]; //ce qui est choisi par l'utilisateur
+    mouvements: Mouvement[], // rendu calculé
     resultat: ResultatCombat;
     success: boolean;
     inventaire: Inventaire;
     tresor: Inventaire;
     ennemi: Ennemi;
-    mouvements: Mouvement[],
     presentation: string,
+    preparations: Preparation[],
+}
+
+interface Preparation {
+    id: string;
+    type: string;
+    cible: string;
+    status: string;
 }
 
 interface Ennemi {
@@ -96,6 +104,7 @@ class _Position implements Position {
     success: boolean = false;
     tresor: Inventaire;
     presentation: string;
+    preparations = [];
 
     constructor(id: string) {
         this.id = id;
@@ -157,13 +166,13 @@ const POSITIONS: Position[] = [
     },
     {
         ... new _Position("position-3"),
-        message: "Vous entrez une petite salle remplie de toilles d'areignées. Une areignée géante vénimeuse vous tombe soudain dessus.",
+        message: "Vous entrez une petite salle remplie de toilles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
         tresor: {objets:[], nbPotions: 0, nbRunes:0},
         ennemi: {
-            nom: "l'areiegnée",
+            nom: "l'araiegnée",
             attaque: 6,
             defense: 4,
-            vitesse: 1
+            vitesse: 2
         },
         presentation: "spider",
     }
@@ -264,6 +273,15 @@ window.onload = function() {
                     for(let i = 0; i < attributs.length; i++) {
                         attributs.item(i).classList.add("evidence");
                     }
+
+                    console.log(o, o.getAttribute("tdd-preparation"), o.getAttribute("tdd-attribut"));
+
+                    const preparation = o.getAttribute("tdd-preparation");
+                    if(preparation) {
+                        o.classList.remove(o.getAttribute("tdd-attribut"));
+                        trouverPreparationDansPosition(POSITION, preparation).cible = null;
+                        console.log(POSITION.preparations);
+                    }
                 } else if(objetReference === 'rune') {
                     // gérer de pouvoir cibler une arme
 
@@ -286,6 +304,8 @@ window.onload = function() {
     })
 
     body.addEventListener('touchmove', function(e) {
+        if (!DRAG.element) return;
+
         // grab the location of touch
         const touchLocation = e.targetTouches[0];
 
@@ -350,6 +370,9 @@ window.onload = function() {
 
         DRAG.element.classList.remove("dragging");
         DRAG.element = null;
+
+        recalculerAventure();
+        dessinerPosition();
     })
 
 }
@@ -358,8 +381,9 @@ function choisirEvidence(objet: Element, evidence: Element) {
     console.log("choisir evidence", objet, evidence);
 
     const attribut = evidence.getAttribute("tdd-attribut");
-    if(attribut) {
-
+    const preparation = objet.getAttribute("tdd-preparation");
+    if(attribut && preparation) {
+        trouverPreparationDansPosition(POSITION, preparation).cible = attribut;
     }
 
 }
@@ -399,12 +423,10 @@ function dessinerPosition() {
     message.innerHTML = "<- "+POSITION.message;
 
     const pause = document.getElementById("pause-actions");
+    pause.innerHTML = '';
     // ecrire la pause
-    for(let i=0; i<POSITION.inventaire.nbPotions; i++) {
-        pause.append(ajouterObjet('potion', true, null));
-    }
-    for(let i=0; i<POSITION.inventaire.nbRunes; i++) {
-        pause.append(ajouterObjet('rune', true, null));
+    for(let preparation of POSITION.preparations) {
+        pause.append(ajouterObjet(preparation.type, true, null, preparation));
     }
 
     // écrire les attributs
@@ -438,20 +460,20 @@ function dessinerPosition() {
     const tresor = document.getElementById('tresor');
     tresor.innerHTML = '';
     for(let o of POSITION.tresor.objets) {
-        tresor.append(ajouterObjet(o, false, null));
+        tresor.append(ajouterObjet(o, false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbPotions; i++) {
-        tresor.append(ajouterObjet('potion', false, null));
+        tresor.append(ajouterObjet('potion', false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbRunes; i++) {
-        tresor.append(ajouterObjet('rune', false, null));
+        tresor.append(ajouterObjet('rune', false, null, null));
     }
 
     // dessiner l'inventaire
     const inventaire = document.getElementById('inventaire');
     inventaire.innerHTML = '';
     for(let o of POSITION.inventaire.objets) {
-        inventaire.append(ajouterObjet(o, true, null));
+        inventaire.append(ajouterObjet(o, true, null, null));
     }
 
     // dessiner le combat
@@ -471,7 +493,7 @@ function dessinerPosition() {
     for(let m of POSITION.combat) {
         const mouvement: Mouvement = trouverMouvement(m);
         const effetMouvement: Mouvement = trouverMouvementDansPosition(POSITION, m);
-        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement)
+        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement, null)
         switch (mouvement.type) {
             case 'technique': technique.prepend(fantome); break;
             case 'sort': sort.prepend(fantome); break;
@@ -496,6 +518,29 @@ function recalculerAventure() {
     };
 
     for(let position of POSITIONS) {
+        const preparations: Preparation[] = [];
+        for(let preparation of position.preparations) {
+            if(preparation.type === 'potion' && preparation.cible) {
+                if(inventaire.nbPotions > 0) {
+                    inventaire.nbPotions --;
+                    preparations.push(preparation);
+                    preparation.status = "ok";
+                    hero[preparation.cible]++;
+                } else {
+                    preparations.push(preparation);
+                    preparation.status = "ko";
+                }
+            }
+        }
+        for(let i=0; i<inventaire.nbPotions; i++) {
+            preparations.push({cible: null, id: "potion-"+i, type: "potion", status: "ok"});
+        }
+        for(let i=0; i<inventaire.nbRunes; i++) {
+            preparations.push({cible: null, id: "rune-"+i, type: "rune", status: "ok"});
+        }
+        position.preparations = preparations;
+
+
         position.inventaire = {objets:[...inventaire.objets], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
 
         const caracteristique: Caracteristique = {
@@ -540,8 +585,6 @@ function recalculerAventure() {
 
             for(let mouvement of MOUVEMENTS) {
                 if(position.combat.indexOf(mouvement.id) > -1) {
-                    console.log(mouvement);
-
                     utilisations[mouvement.type] ++;
 
                     // vérifier qu'on utilise un objet une seule fois
@@ -664,8 +707,16 @@ function trouverMouvementDansPosition(position: Position, id: string): Mouvement
     }
     return null;
 }
+function trouverPreparationDansPosition(position: Position, id: string) {
+    for(let mouvement of position.preparations) {
+        if(mouvement.id === id) {
+            return mouvement;
+        }
+    }
+    return null;
+}
 
-function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement): HTMLDivElement {
+function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement, preparation: Preparation): HTMLDivElement {
     const fantome = document.createElement('div');
     fantome.classList.add("action");
     fantome.classList.add("fantome");
@@ -682,6 +733,18 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement)
         // ajouter les marqueurs indicatifs visuels du mouvement
         fantome.append(creerMarqueurs(mouvement));
     }
+    if(preparation) {
+        objet.setAttribute("tdd-preparation", preparation.id);
+        if(preparation.cible) {
+            objet.classList.add(preparation.cible);
+            objet.setAttribute("tdd-attribut", preparation.cible);
+        }
+        if(preparation.status !== "ok") {
+            objet.classList.add('error');
+        }
+        objet.innerHTML=preparation.id;
+    }
+
     fantome.append(objet);
     return fantome;
 }
