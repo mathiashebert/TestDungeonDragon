@@ -52,6 +52,7 @@ interface Objet {
     mouvements: string[];
     niveau: number;
     categorie: string;
+    status: string;
 }
 
 interface Mouvement {
@@ -70,7 +71,7 @@ interface Mouvement {
 }
 
 interface Inventaire {
-    objets: string[];
+    objets: Objet[];
     nbRunes: number;
     nbPotions: number;
 }
@@ -142,11 +143,43 @@ let DRAG : Drag = {
     element: undefined
 }
 
+const OBJETS: Objet[] = [
+    {
+        id: "epee",
+        mouvements: ["epee_frapper"],
+        niveau: 1,
+        categorie: "arme",
+        status: "ok",
+    },
+    {
+        id: "lance",
+        mouvements: ["lance_frapper", "lance_jeter"],
+        niveau: 1,
+        categorie: "arme",
+        status: "ok",
+    },
+    {
+        id: "bouclier",
+        mouvements: ["bouclier_bloquer"],
+        niveau: 1,
+        categorie: "arme",
+        status: "ok",
+    },
+    {
+        id: "manuelAventurier",
+        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
+        niveau: 1,
+        categorie: "livre",
+        status: "ok",
+    }
+]
+
+
 const POSITIONS: Position[] = [
     {
         ... new _Position("position-1"),
         message: "vous arrivez devant le manoir, armé de votre seule épée. Un squelette garde le portail.",
-        tresor: {objets:["lance", "bouclier"], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("lance"), trouverObjet("bouclier")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le squelette",
             attaque: 1,
@@ -158,7 +191,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-2"),
         message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
-        tresor: {objets:["manuelAventurier"], nbPotions: 1, nbRunes:1},
+        tresor: {objets:[trouverObjet("manuelAventurier")], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le zombie",
             attaque: 4,
@@ -195,32 +228,6 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("bouclier_bloquer", "bloquer", "bouclier"), defense: 2}
 ]
 
-const OBJETS: Objet[] = [
-    {
-        id: "epee",
-        mouvements: ["epee_frapper"],
-        niveau: 1,
-        categorie: "arme",
-    },
-    {
-        id: "lance",
-        mouvements: ["lance_frapper", "lance_jeter"],
-        niveau: 1,
-        categorie: "arme",
-    },
-    {
-        id: "bouclier",
-        mouvements: ["bouclier_bloquer"],
-        niveau: 1,
-        categorie: "arme",
-    },
-    {
-        id: "manuelAventurier",
-        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
-        niveau: 1,
-        categorie: "livre",
-    }
-]
 
 
 
@@ -482,7 +489,7 @@ function dessinerPosition() {
     const tresor = document.getElementById('tresor');
     tresor.innerHTML = '';
     for(let o of POSITION.tresor.objets) {
-        tresor.append(ajouterObjet(o, false, null, null));
+        tresor.append(ajouterObjet(o.id, false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbPotions; i++) {
         tresor.append(ajouterObjet('potion', false, null, null));
@@ -495,7 +502,9 @@ function dessinerPosition() {
     const inventaire = document.getElementById('inventaire');
     inventaire.innerHTML = '';
     for(let o of POSITION.inventaire.objets) {
-        inventaire.append(ajouterObjet(o, true, null, null));
+        if(o.status === "ok") {
+            inventaire.append(ajouterObjet(o.id, true, null, null));
+        }
     }
 
     // dessiner le combat
@@ -530,7 +539,7 @@ function dessinerPosition() {
 
 
 function recalculerAventure() {
-    const inventaire: Inventaire = {objets:["epee"], nbRunes: 0, nbPotions: 0};
+    const inventaire: Inventaire = {objets:[{...trouverObjet("epee")}], nbRunes: 0, nbPotions: 0};
 
     const hero: Hero = {
         force: 1,
@@ -560,7 +569,7 @@ function recalculerAventure() {
                 if(inventaire.nbRunes > 0) {
                     inventaire.nbRunes --;
                     preparation.status = "ok";
-                    // todo : augmenter l'arme de 1
+                    inventaire.objets.filter(value => value.id === preparation.cible).forEach(value => value.niveau++);
                 } else {
                     preparation.status = "ko";
                 }
@@ -575,7 +584,7 @@ function recalculerAventure() {
         position.preparations = preparations;
 
 
-        position.inventaire = {objets:[...inventaire.objets], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
+        position.inventaire = {objets:[...inventaire.objets.map(value => {return{...value};})], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
 
         const caracteristique: Caracteristique = {
             attaqueDistance: 0,
@@ -631,10 +640,12 @@ function recalculerAventure() {
 
 
                     // enlever les objets utilisés de l'inventaire
-                    enleverDuTableau(position.inventaire.objets, mouvement.objet);
+                    // todo : mettre l'objet comme "utilisé"
+                    trouverObjetDansPosition(position, mouvement.objet).status = "ko";
+                    //enleverDuTableau(position.inventaire.objets, mouvement.objet);
 
                     // ajouter l'attaque
-                    const effetMouvement: Mouvement = calculerEffetMouvement(mouvement, hero);
+                    const effetMouvement: Mouvement = calculerEffetMouvement(position, mouvement, hero);
                     position.mouvements.push(effetMouvement);
 
                     if(effetMouvement.distance) {
@@ -675,7 +686,7 @@ function recalculerAventure() {
             }
 
             else if(caracteristique.attaqueDistance > ennemi.defense) {
-                position.resultat.message = "Vous écrasez "+nomEnnemi;
+                position.resultat.message = "Vous dégommez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.defense <= 0) {
                 position.resultat.message = "Vous carbonisez "+nomEnnemi;
@@ -701,7 +712,9 @@ function recalculerAventure() {
         // récupérer le trésor
         inventaire.nbPotions += position.tresor.nbPotions;
         inventaire.nbRunes += position.tresor.nbRunes;
-        inventaire.objets = [...inventaire.objets, ...position.tresor.objets];
+        for(let tresor of position.tresor.objets) {
+            inventaire.objets.push({...tresor});
+        }
 
         // gérer la pause
 
@@ -719,6 +732,14 @@ function trouverPosition(id: string): Position {
 }
 function trouverObjet(id: string): Objet {
     for(let objet of OBJETS) {
+        if(objet.id === id) {
+            return objet;
+        }
+    }
+    return null;
+}
+function trouverObjetDansPosition(position: Position, id: string): Objet {
+    for(let objet of position.inventaire.objets) {
         if(objet.id === id) {
             return objet;
         }
@@ -799,7 +820,7 @@ function ajouterAssiette(mouvement: Mouvement) {
         }
         document.getElementById(type).prepend(assiette);
 
-        const effetMouvement = calculerEffetMouvement(mouvement, POSITION.resultat.hero);
+        const effetMouvement = calculerEffetMouvement(POSITION, mouvement, POSITION.resultat.hero);
         assiette.append(creerMarqueurs(effetMouvement));
 
     } else {
@@ -818,8 +839,8 @@ function enleverDuTableau(tableau: string[], element: string) {
     }
 }
 
-function calculerEffetMouvement(mouvement: Mouvement, hero): Mouvement {
-    const objet: Objet = trouverObjet(mouvement.objet);
+function calculerEffetMouvement(position: Position, mouvement: Mouvement, hero): Mouvement {
+    const objet: Objet = trouverObjetDansPosition(position, mouvement.objet);
 
     let attaque = mouvement.attaque * objet.niveau;
     let defense = mouvement.defense * objet.niveau;
