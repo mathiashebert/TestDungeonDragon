@@ -245,17 +245,23 @@ body {
     /*overflow: visible;*/
 }
 .evidence::after {
-    box-shadow: rebeccapurple 0px 1vh 1vh;
+    box-shadow: rebeccapurple 0px 0px 1vh 0.5vh;
     opacity: 0;
     animation: pulse 2s infinite;
+    content: "";
+    animation: pulse 1s infinite;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+.attribut.evidence::after {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    content: "";
-    animation: pulse 1s infinite;
 
+}
+.evidence-hover::after {
+    box-shadow: darkred 0px 0px 1vh 1vh;
 }
 
 @keyframes pulse {
@@ -270,25 +276,7 @@ body {
     }
 }
 
-/* inventaire */
-.epee {
-    background-image: url("img/epee.png");
-    background-size: cover;
-}
 
-.lance {
-    background-image: url("img/lance.avif");
-    background-size: cover;
-}
-
-.bouclier {
-    background-image: url("img/bouclier.jpeg");
-    background-size: cover;
-}
-.manuelAventurier {
-    background-image: url("img/grimoire.png");
-    background-size: cover;
-}
 
 .potion {
     background-image: url("img/potion.png");
@@ -370,4 +358,24 @@ body {
 }
 .mana {
     background-image: url("img/mana.png");
+}
+
+/* inventaire */
+.epee {
+    background-image: url("img/epee.png");
+    background-size: cover;
+}
+
+.lance {
+    background-image: url("img/lance.avif");
+    background-size: cover;
+}
+
+.bouclier {
+    background-image: url("img/bouclier.jpeg");
+    background-size: cover;
+}
+.manuelAventurier {
+    background-image: url("img/grimoire.png");
+    background-size: cover;
 }

@@ -30,6 +30,7 @@ interface Position {
     ennemi: Ennemi;
     presentation: string,
     preparations: Preparation[],
+    objets: Objet[],
 }
 
 interface Preparation {
@@ -50,6 +51,7 @@ interface Objet {
     id: string;
     mouvements: string[];
     niveau: number;
+    categorie: string;
 }
 
 interface Mouvement {
@@ -105,6 +107,7 @@ class _Position implements Position {
     tresor: Inventaire;
     presentation: string;
     preparations = [];
+    objets = [];
 
     constructor(id: string) {
         this.id = id;
@@ -196,22 +199,26 @@ const OBJETS: Objet[] = [
     {
         id: "epee",
         mouvements: ["epee_frapper"],
-        niveau: 1
+        niveau: 1,
+        categorie: "arme",
     },
     {
         id: "lance",
         mouvements: ["lance_frapper", "lance_jeter"],
-        niveau: 1
+        niveau: 1,
+        categorie: "arme",
     },
     {
         id: "bouclier",
         mouvements: ["bouclier_bloquer"],
-        niveau: 1
+        niveau: 1,
+        categorie: "arme",
     },
     {
         id: "manuelAventurier",
         mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
-        niveau: 1
+        niveau: 1,
+        categorie: "livre",
     }
 ]
 
@@ -274,16 +281,23 @@ window.onload = function() {
                         attributs.item(i).classList.add("evidence");
                     }
 
-                    console.log(o, o.getAttribute("tdd-preparation"), o.getAttribute("tdd-attribut"));
-
                     const preparation = o.getAttribute("tdd-preparation");
                     if(preparation) {
-                        o.classList.remove(o.getAttribute("tdd-attribut"));
+                        o.classList.remove(o.getAttribute("tdd-cible"));
                         trouverPreparationDansPosition(POSITION, preparation).cible = null;
-                        console.log(POSITION.preparations);
                     }
                 } else if(objetReference === 'rune') {
                     // gérer de pouvoir cibler une arme
+                    const arme = document.getElementsByClassName("arme");
+                    for(let i = 0; i < arme.length; i++) {
+                        arme.item(i).classList.add("evidence");
+                    }
+
+                    const preparation = o.getAttribute("tdd-preparation");
+                    if(preparation) {
+                        o.classList.remove(o.getAttribute("tdd-cible"));
+                        trouverPreparationDansPosition(POSITION, preparation).cible = null;
+                    }
 
                 } else {
                     const objet = trouverObjet(objetReference);
@@ -359,6 +373,10 @@ window.onload = function() {
             const o = document.getElementsByClassName("evidence").item(0);
             o.classList.remove("evidence");
         }
+        while(document.getElementsByClassName("evidence-hover").length > 0) {
+            const o = document.getElementsByClassName("evidence-hover").item(0);
+            o.classList.remove("evidence-hover");
+        }
 
         // retirer les assiettes
         assiettes = document.getElementsByClassName("assiette");
@@ -381,9 +399,13 @@ function choisirEvidence(objet: Element, evidence: Element) {
     console.log("choisir evidence", objet, evidence);
 
     const attribut = evidence.getAttribute("tdd-attribut");
+    const arme = evidence.getAttribute("tdd-objet");
     const preparation = objet.getAttribute("tdd-preparation");
     if(attribut && preparation) {
         trouverPreparationDansPosition(POSITION, preparation).cible = attribut;
+    }
+    if(arme && preparation) {
+        trouverPreparationDansPosition(POSITION, preparation).cible = arme;
     }
 
 }
@@ -521,22 +543,34 @@ function recalculerAventure() {
         const preparations: Preparation[] = [];
         for(let preparation of position.preparations) {
             if(preparation.type === 'potion' && preparation.cible) {
+                preparation.id="potion-"+preparations.length;
+                preparations.push(preparation);
                 if(inventaire.nbPotions > 0) {
                     inventaire.nbPotions --;
-                    preparations.push(preparation);
                     preparation.status = "ok";
                     hero[preparation.cible]++;
                 } else {
-                    preparations.push(preparation);
+                    preparation.status = "ko";
+                }
+            }
+
+            if(preparation.type === 'rune' && preparation.cible) {
+                preparation.id="rune-"+preparations.length;
+                preparations.push(preparation);
+                if(inventaire.nbRunes > 0) {
+                    inventaire.nbRunes --;
+                    preparation.status = "ok";
+                    // todo : augmenter l'arme de 1
+                } else {
                     preparation.status = "ko";
                 }
             }
         }
         for(let i=0; i<inventaire.nbPotions; i++) {
-            preparations.push({cible: null, id: "potion-"+i, type: "potion", status: "ok"});
+            preparations.push({cible: null, id: "potion-"+preparations.length, type: "potion", status: "ok"});
         }
         for(let i=0; i<inventaire.nbRunes; i++) {
-            preparations.push({cible: null, id: "rune-"+i, type: "rune", status: "ok"});
+            preparations.push({cible: null, id: "rune-"+preparations.length, type: "rune", status: "ok"});
         }
         position.preparations = preparations;
 
@@ -737,12 +771,15 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
         objet.setAttribute("tdd-preparation", preparation.id);
         if(preparation.cible) {
             objet.classList.add(preparation.cible);
-            objet.setAttribute("tdd-attribut", preparation.cible);
+            objet.setAttribute("tdd-cible", preparation.cible);
         }
         if(preparation.status !== "ok") {
             objet.classList.add('error');
         }
         objet.innerHTML=preparation.id;
+    }
+    if(trouverObjet(classe)) {
+        objet.classList.add(trouverObjet(classe).categorie);
     }
 
     fantome.append(objet);
