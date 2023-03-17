@@ -325,6 +325,30 @@ body {
     background-image: url("img/ghost.jpeg");
     background-size: cover;
 }
+#presentation.hag {
+    background-image: url("img/hag.jpeg");
+    background-size: cover;
+}
+#presentation.ghoul {
+    background-image: url("img/ghoul.jpeg");
+    background-size: cover;
+}
+#presentation.scarecrow {
+    background-image: url("img/scarecrow.jpeg");
+    background-size: cover;
+}
+#presentation.werewolf {
+    background-image: url("img/werewolf.jpeg");
+    background-size: cover;
+}
+#presentation.banshee {
+    background-image: url("img/banshee.jpeg");
+    background-size: cover;
+}
+#presentation.vampire {
+    background-image: url("img/vampire.jpeg");
+    background-size: cover;
+}
 #presentation-message {
     display: inline-block;
     background: bisque;
@@ -395,7 +419,24 @@ body {
     background-image: url("img/dague.png");
     background-size: cover;
 }
+.hacheDeGlace {
+    background-image: url("img/hacheDeGlace.png");
+    background-size: cover;
+}
+.bouclierDeGlace {
+    background-image: url("img/bouclierDeGlace.png");
+    background-size: cover;
+}
 
 .error {
     border: solid 2px red;
+}
+.position-success {
+    border-color: green;
+}
+.position-fail {
+    border-color: red;
+}
+.position-unknown {
+    display: none;
 }

@@ -211,9 +211,20 @@ const OBJETS: Objet[] = [
         ... new _Objet("dagueRunique", TypeObjet.arme),
         niveau: 2,
         mouvements: ["dagueRunique_jeter", "dagueRunique_frapper"]
+    },
+    {
+        ... new _Objet("hacheDeGlace", TypeObjet.arme),
+        niveau: 1,
+        mouvements: [] // todo
+    },
+    {
+        ... new _Objet("bouclierDeGlace", TypeObjet.arme),
+        niveau: 1,
+        mouvements: [] // todo
     }
 ]
 
+let POSITION_DECOUVERTE:number = 9; // commence à 0
 
 const POSITIONS: Position[] = [
     {
@@ -244,7 +255,7 @@ const POSITIONS: Position[] = [
     },
     {
         ... new _Position("position-3"),
-        message: "Vous entrez une petite salle remplie de toilles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
+        message: "Vous entrez une petite salle remplie de toiles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
         tresor: {objets:[trouverObjet("dagueRunique")/*, trouverObjet("projectileMagique")*/], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'araiegnée",
@@ -258,7 +269,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-4"),
         message: "Vous avancez dans un long couloir. Un fantôme vous barre la route.",
-        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le fantôme",
             attaque: 5,
@@ -267,7 +278,87 @@ const POSITIONS: Position[] = [
             ethere: true
         },
         presentation: "ghost",
+    },
+    {
+        ... new _Position("position-5"),
+        message: "Vous entrez dans la cuisine. Une vieille sorcière s'occupe d'un chaudron fumant",
+        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace")], nbPotions: 2, nbRunes:0},
+        ennemi: {
+            nom: "la socrière",
+            attaque: 8,
+            defense: 4,
+            vitesse: 2,
+            ethere: true
+        },
+        presentation: "hag",
+    },
+    {
+        ... new _Position("position-6"),
+        message: "Vous descendez à la cave. Une ghoule vous aprrçoit, et avance vers vous... lentement...",
+        tresor: {objets:[], nbPotions: 0, nbRunes:2},
+        ennemi: {
+            nom: "la ghoule",
+            attaque: 6,
+            defense: 12,
+            vitesse: 0,
+            ethere: true
+        },
+        presentation: "ghoul",
+    },
+    {
+        ... new _Position("position-7"),
+        message: "épouvantail",
+        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        ennemi: {
+            nom: "l'épouvantail",
+            attaque: 0,
+            defense: 0,
+            vitesse: 0,
+            ethere: false
+        },
+        presentation: "scarecrow",
+    },
+    {
+        ... new _Position("position-8"),
+        message: "Un loup garou",
+        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        ennemi: {
+            nom: "le loup-garou",
+            attaque: 15,
+            defense: 15,
+            vitesse: 10,
+            ethere: false
+        },
+        presentation: "werewolf",
+    },
+    {
+        ... new _Position("position-9"),
+        message: "Devant vous, se tient la banshee",
+        tresor: {objets:[], nbPotions: 1, nbRunes:1},
+        ennemi: {
+            nom: "la banshee",
+            attaque: 30,
+            defense: 10,
+            vitesse: 10,
+            ethere: true
+        },
+        presentation: "banshee",
+    },
+    {
+        ... new _Position("position-10"),
+        message: "Vous arrivez enfin devant le boss final : un vampire",
+        tresor: {objets:[], nbPotions: 0, nbRunes:2},
+        ennemi: {
+            nom: "le vampire",
+            attaque: 30,
+            defense: 30,
+            vitesse: 10,
+            ethere: false
+        },
+        presentation: "vampire",
     }
+
+
 ];
 
 let POSITION: Position = POSITIONS[0];
@@ -779,12 +870,25 @@ function recalculerAventure() {
         }
 
 
+
+        const index:number = parseInt(position.id.split("-")[1]);
         if(position.success) {
-            document.getElementById(position.id).classList.remove("fail");
-            document.getElementById(position.id).classList.add("success");
+            document.getElementById(position.id).classList.remove("position-fail");
+            document.getElementById(position.id).classList.add("position-success");
+            document.getElementById(position.id).classList.remove("position-unknown");
+            if(index > POSITION_DECOUVERTE) {
+                POSITION_DECOUVERTE = index;
+            }
+        } else if (index > POSITION_DECOUVERTE+1) {
+            document.getElementById(position.id).classList.remove("position-fail");
+            document.getElementById(position.id).classList.remove("position-success");
+
+            document.getElementById(position.id).classList.add("position-unknown");
+
         } else {
-            document.getElementById(position.id).classList.add("fail");
-            document.getElementById(position.id).classList.remove("success");
+            document.getElementById(position.id).classList.add("position-fail");
+            document.getElementById(position.id).classList.remove("position-success");
+            document.getElementById(position.id).classList.remove("position-unknown");
         }
 
     }
