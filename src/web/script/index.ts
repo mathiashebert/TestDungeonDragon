@@ -33,11 +33,19 @@ interface Position {
     objets: Objet[],
 }
 
+enum StatusPreparation {
+    preparation_ok,
+    preparation_ko
+}
+enum TypePreparation {
+    potion = "potion",
+    rune = "rune"
+}
 interface Preparation {
     id: string;
-    type: string;
+    type: TypePreparation;
     cible: string;
-    status: string;
+    status: StatusPreparation;
 }
 
 interface Ennemi {
@@ -45,19 +53,40 @@ interface Ennemi {
     attaque: number;
     defense: number;
     vitesse: number;
+
+    ethere: boolean;
 }
 
+enum StatusObjet {
+    objet_ok,
+    objet_ko
+}
+enum TypeObjet {
+    arme = "arme",
+    livre = "livre"
+}
 interface Objet {
     id: string;
     mouvements: string[];
     niveau: number;
-    categorie: string;
-    status: string;
+    type: TypeObjet;
+    status: StatusObjet;
 }
 
+enum StatusMouvement {
+    mouvement_ok,
+    mouvement_ko
+}
+enum TypeMouvement {
+    technique,
+    sort,
+    jeter,
+    frapper,
+    bloquer
+}
 interface Mouvement {
     id: string;
-    type: string;
+    type: TypeMouvement;
     objet: string;
 
     attaque: number;
@@ -68,6 +97,8 @@ interface Mouvement {
     distance: boolean;
     feu: boolean;
     glace: boolean;
+
+    status: StatusMouvement;
 }
 
 interface Inventaire {
@@ -125,13 +156,28 @@ class _Mouvement implements Mouvement {
     id: string;
     mana: number = 0;
     objet: string;
-    type: string;
+    type: TypeMouvement;
     vitesse: number = 0;
+    status: StatusMouvement = StatusMouvement.mouvement_ok;
 
-    constructor(id: string, type: string, objet: string) {
+    constructor(id: string, type: TypeMouvement, objet: string) {
         this.id = id;
         this.type = type;
         this.objet = objet;
+    }
+
+}
+
+class _Objet implements Objet {
+    id: string;
+    mouvements: string[];
+    niveau: number = 1;
+    status: StatusObjet = StatusObjet.objet_ok;
+    type: TypeObjet;
+
+    constructor(id: string, type: TypeObjet) {
+        this.id = id;
+        this.type = type;
     }
 
 }
@@ -145,32 +191,26 @@ let DRAG : Drag = {
 
 const OBJETS: Objet[] = [
     {
-        id: "epee",
-        mouvements: ["epee_frapper"],
-        niveau: 1,
-        categorie: "arme",
-        status: "ok",
+        ... new _Objet("epee", TypeObjet.arme),
+        mouvements: ["epee_frapper"]
     },
     {
-        id: "lance",
-        mouvements: ["lance_frapper", "lance_jeter"],
-        niveau: 1,
-        categorie: "arme",
-        status: "ok",
+        ... new _Objet("lance", TypeObjet.arme),
+        mouvements: ["lance_frapper", "lance_jeter"]
     },
     {
+        ... new _Objet("bouclier", TypeObjet.arme),
         id: "bouclier",
-        mouvements: ["bouclier_bloquer"],
-        niveau: 1,
-        categorie: "arme",
-        status: "ok",
+        mouvements: ["bouclier_bloquer"]
     },
     {
-        id: "manuelAventurier",
-        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
-        niveau: 1,
-        categorie: "livre",
-        status: "ok",
+        ... new _Objet("manuelAventurier", TypeObjet.livre),
+        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"]
+    },
+    {
+        ... new _Objet("dagueRunique", TypeObjet.arme),
+        niveau: 2,
+        mouvements: ["dagueRunique_jeter", "dagueRunique_frapper"]
     }
 ]
 
@@ -184,7 +224,8 @@ const POSITIONS: Position[] = [
             nom: "le squelette",
             attaque: 1,
             defense: 1,
-            vitesse: 1
+            vitesse: 1,
+            ethere: false
         },
         presentation: "skeleton",
     },
@@ -196,36 +237,54 @@ const POSITIONS: Position[] = [
             nom: "le zombie",
             attaque: 4,
             defense: 4,
-            vitesse: 0
+            vitesse: 0,
+            ethere: false
         },
         presentation: "zombie",
     },
     {
         ... new _Position("position-3"),
         message: "Vous entrez une petite salle remplie de toilles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
-        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("dagueRunique")/*, trouverObjet("projectileMagique")*/], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'araiegnée",
             attaque: 6,
             defense: 4,
-            vitesse: 2
+            vitesse: 2,
+            ethere: false
         },
         presentation: "spider",
+    },
+    {
+        ... new _Position("position-4"),
+        message: "Vous avancez dans un long couloir. Un fantôme vous barre la route.",
+        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        ennemi: {
+            nom: "le fantôme",
+            attaque: 5,
+            defense: 5,
+            vitesse: 1,
+            ethere: true
+        },
+        presentation: "ghost",
     }
 ];
 
 let POSITION: Position = POSITIONS[0];
 
 const MOUVEMENTS: Mouvement[] = [
-    {... new _Mouvement("manuelAventurier_positionAggressive", "technique", "manuelAventurier"), attaque: 1},
-    {... new _Mouvement("manuelAventurier_positionDefensive", "technique", "manuelAventurier"), defense: 1},
-    {... new _Mouvement("manuelAventurier_reflexes", "technique", "manuelAventurier"), vitesse: 1},
-    {... new _Mouvement("manuelAventurier_concentration", "technique", "manuelAventurier"), mana: 1},
+    {... new _Mouvement("manuelAventurier_positionAggressive", TypeMouvement.technique, "manuelAventurier"), attaque: 1},
+    {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), defense: 1},
+    {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), vitesse: 1},
+    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), mana: 1},
 
-    {... new _Mouvement("epee_frapper", "frapper", "epee"), attaque: 1, defense: 1},
-    {... new _Mouvement("lance_frapper", "frapper", "lance"), attaque: 2},
-    {... new _Mouvement("lance_jeter", "jeter", "lance"), attaque: 2, distance: true},
-    {... new _Mouvement("bouclier_bloquer", "bloquer", "bouclier"), defense: 2}
+    {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attaque: 1, defense: 1},
+    {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attaque: 2},
+    {... new _Mouvement("lance_jeter", TypeMouvement.jeter, "lance"), attaque: 2, distance: true},
+    {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), defense: 2},
+    {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attaque: 1, distance: true},
+    {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attaque: 1},
+
 ]
 
 
@@ -502,7 +561,7 @@ function dessinerPosition() {
     const inventaire = document.getElementById('inventaire');
     inventaire.innerHTML = '';
     for(let o of POSITION.inventaire.objets) {
-        if(o.status === "ok") {
+        if(o.status === StatusObjet.objet_ok) {
             inventaire.append(ajouterObjet(o.id, true, null, null));
         }
     }
@@ -524,14 +583,10 @@ function dessinerPosition() {
     for(let m of POSITION.combat) {
         const mouvement: Mouvement = trouverMouvement(m);
         const effetMouvement: Mouvement = trouverMouvementDansPosition(POSITION, m);
-        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement, null)
-        switch (mouvement.type) {
-            case 'technique': technique.prepend(fantome); break;
-            case 'sort': sort.prepend(fantome); break;
-            case 'jeter': jeter.prepend(fantome); break;
-            case 'frapper': frapper.prepend(fantome); break;
-            case 'bloquer': frapper.prepend(fantome); break;
-        }
+        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement, null);
+
+        const type = mouvement.type === TypeMouvement.bloquer ? TypeMouvement.frapper : mouvement.type; // le type 'bloquer' est ajouté à 'frapper'
+        document.getElementById( TypeMouvement[type] ).prepend(fantome);
     }
 
 
@@ -556,10 +611,10 @@ function recalculerAventure() {
                 preparations.push(preparation);
                 if(inventaire.nbPotions > 0) {
                     inventaire.nbPotions --;
-                    preparation.status = "ok";
+                    preparation.status = StatusPreparation.preparation_ok;
                     hero[preparation.cible]++;
                 } else {
-                    preparation.status = "ko";
+                    preparation.status = StatusPreparation.preparation_ko;
                 }
             }
 
@@ -568,22 +623,23 @@ function recalculerAventure() {
                 preparations.push(preparation);
                 if(inventaire.nbRunes > 0) {
                     inventaire.nbRunes --;
-                    preparation.status = "ok";
+                    preparation.status = StatusPreparation.preparation_ok;
                     inventaire.objets.filter(value => value.id === preparation.cible).forEach(value => value.niveau++);
                 } else {
-                    preparation.status = "ko";
+                    preparation.status = StatusPreparation.preparation_ko;
                 }
             }
         }
         for(let i=0; i<inventaire.nbPotions; i++) {
-            preparations.push({cible: null, id: "potion-"+preparations.length, type: "potion", status: "ok"});
+            preparations.push({cible: null, id: "potion-"+preparations.length, type: TypePreparation.potion, status: StatusPreparation.preparation_ok});
         }
         for(let i=0; i<inventaire.nbRunes; i++) {
-            preparations.push({cible: null, id: "rune-"+preparations.length, type: "rune", status: "ok"});
+            preparations.push({cible: null, id: "rune-"+preparations.length, type: TypePreparation.rune, status: StatusPreparation.preparation_ok});
         }
         position.preparations = preparations;
 
 
+        // recopier l'état de l'inventaire, dans l'inventaire de la position
         position.inventaire = {objets:[...inventaire.objets.map(value => {return{...value};})], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
 
         const caracteristique: Caracteristique = {
@@ -606,8 +662,6 @@ function recalculerAventure() {
         position.resultat.caracteristiqueHero = caracteristique;
         position.resultat.caracteristiqueEnnemi = ennemi;
 
-        const references = [];
-
         const utilisations = {
             technique: 0,
             sort : 0,
@@ -628,25 +682,27 @@ function recalculerAventure() {
 
             for(let mouvement of MOUVEMENTS) {
                 if(position.combat.indexOf(mouvement.id) > -1) {
-                    utilisations[mouvement.type] ++;
-
-                    // vérifier qu'on utilise un objet une seule fois
-                    if(references.indexOf(mouvement.objet) > -1) {
-                        continue;
-                    }
-                    references.push(mouvement.objet);
-
-                    // vérifier que l'objet est disponibles ?
-
-
-                    // enlever les objets utilisés de l'inventaire
-                    // todo : mettre l'objet comme "utilisé"
-                    trouverObjetDansPosition(position, mouvement.objet).status = "ko";
-                    //enleverDuTableau(position.inventaire.objets, mouvement.objet);
+                    const objet = trouverObjetDansPosition(position, mouvement.objet);
 
                     // ajouter l'attaque
-                    const effetMouvement: Mouvement = calculerEffetMouvement(position, mouvement, hero);
+                    const effetMouvement: Mouvement = calculerEffetMouvement(objet, mouvement, hero);
                     position.mouvements.push(effetMouvement);
+
+                    // vérifier que l'objet est disponible et qu'on l'utilise une seule fois
+                    if(objet.status !== StatusObjet.objet_ok) {
+                        effetMouvement.status = StatusMouvement.mouvement_ko;
+                        continue;
+                    }
+                    // enlever les objets utilisés de l'inventaire
+                    objet.status = StatusObjet.objet_ko;
+
+                    const magique = objet.niveau > 1 || effetMouvement.feu || effetMouvement.glace;
+
+                    // vérifier que si on utilise une arme, elle est magique
+                    if(position.ennemi.ethere && objet.type === TypeObjet.arme && !magique) {
+                        effetMouvement.status = StatusMouvement.mouvement_ko;
+                        continue;
+                    }
 
                     if(effetMouvement.distance) {
                         caracteristique.attaqueDistance += effetMouvement.attaque;
@@ -663,10 +719,16 @@ function recalculerAventure() {
                         ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
                     }
 
+                    // on compte le nombre d'utilisation de chaque type
+                    utilisations[ TypeMouvement[mouvement.type] ] ++;
+
+                    // on améliore le niveau du livre
+                    if(mouvement.type === TypeMouvement.technique) {
+                        inventaire.objets.filter(value => value.id === mouvement.objet).forEach(value => value.niveau++);
+                    }
+
                 }
             }
-
-            console.log("attaque: "+caracteristique.attaque+" defense: "+caracteristique.defense);
 
             let initiative = caracteristique.vitesse - ennemi.vitesse;
             if(initiative <= 0) initiative = 0;
@@ -716,7 +778,14 @@ function recalculerAventure() {
             inventaire.objets.push({...tresor});
         }
 
-        // gérer la pause
+
+        if(position.success) {
+            document.getElementById(position.id).classList.remove("fail");
+            document.getElementById(position.id).classList.add("success");
+        } else {
+            document.getElementById(position.id).classList.add("fail");
+            document.getElementById(position.id).classList.remove("success");
+        }
 
     }
 
@@ -787,6 +856,10 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
 
         // ajouter les marqueurs indicatifs visuels du mouvement
         fantome.append(creerMarqueurs(mouvement));
+
+        if(mouvement.status !== StatusMouvement.mouvement_ok) {
+            objet.classList.add('error');
+        }
     }
     if(preparation) {
         objet.setAttribute("tdd-preparation", preparation.id);
@@ -794,13 +867,25 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
             objet.classList.add(preparation.cible);
             objet.setAttribute("tdd-cible", preparation.cible);
         }
-        if(preparation.status !== "ok") {
+        if(preparation.status !== StatusPreparation.preparation_ok) {
             objet.classList.add('error');
         }
         objet.innerHTML=preparation.id;
     }
-    if(trouverObjet(classe)) {
-        objet.classList.add(trouverObjet(classe).categorie);
+
+    const reference: Objet = trouverObjetDansPosition(POSITION, classe);
+    if(reference) {
+        objet.classList.add(reference.type);
+        if(reference.niveau !== 1) {
+            const marqueurs = document.createElement('div');
+            marqueurs.classList.add("marqueurs");
+            const marqueur = document.createElement('div');
+            marqueur.classList.add("marqueur");
+            marqueur.classList.add("marqueur-niveau");
+            marqueur.innerHTML = String(reference.niveau);
+            marqueurs.append(marqueur);
+            objet.append(marqueurs);
+        }
     }
 
     fantome.append(objet);
@@ -814,13 +899,11 @@ function ajouterAssiette(mouvement: Mouvement) {
     assiette.classList.add('en-construction');
     if(mouvement) {
         assiette.setAttribute("tdd-mouvement", mouvement.id);
-        let type = mouvement.type;
-        if(type === 'bloquer') {
-            type = 'frapper';
-        }
-        document.getElementById(type).prepend(assiette);
+        const type = mouvement.type === TypeMouvement.bloquer ? TypeMouvement.frapper : mouvement.type; // le type 'bloquer' est ajouté à 'frapper'
+        document.getElementById( TypeMouvement[type] ).prepend(assiette);
 
-        const effetMouvement = calculerEffetMouvement(POSITION, mouvement, POSITION.resultat.hero);
+        const objet: Objet = trouverObjetDansPosition(POSITION, mouvement.objet);
+        const effetMouvement = calculerEffetMouvement(objet, mouvement, POSITION.resultat.hero);
         assiette.append(creerMarqueurs(effetMouvement));
 
     } else {
@@ -839,18 +922,17 @@ function enleverDuTableau(tableau: string[], element: string) {
     }
 }
 
-function calculerEffetMouvement(position: Position, mouvement: Mouvement, hero): Mouvement {
-    const objet: Objet = trouverObjetDansPosition(position, mouvement.objet);
+function calculerEffetMouvement(objet: Objet, mouvement: Mouvement, hero): Mouvement {
 
     let attaque = mouvement.attaque * objet.niveau;
     let defense = mouvement.defense * objet.niveau;
     let vitesse = mouvement.vitesse * objet.niveau;
     let mana = mouvement.mana * objet.niveau;
 
-    if(mouvement.type === 'jeter' || mouvement.type === 'frapper') {
+    if(mouvement.type === TypeMouvement.jeter || mouvement.type === TypeMouvement.frapper) {
         attaque += hero.force;
     }
-    if(mouvement.type === 'bloquer' || mouvement.type === 'frapper') {
+    if(mouvement.type === TypeMouvement.bloquer || mouvement.type === TypeMouvement.frapper) {
         defense += hero.endurance;
     }
 

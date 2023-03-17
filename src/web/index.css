@@ -111,7 +111,8 @@ body {
     margin-right: 1vh;
     margin-bottom: 1vh;
     border-radius: 0.5vh;
-
+    overflow-x: scroll;
+    overflow-y: visible;
     /*display: inline-block;*/
 }
 
@@ -195,9 +196,9 @@ body {
 }
 
 .marqueurs {
-    position: absolute;
-    width: 7vh;
-    height: 7vh;
+    position: relative;
+    width: 0vh;
+    height: 0vh;
 
 }
 .marqueur {
@@ -216,18 +217,25 @@ body {
 }
 .marqueur.marqueur-defense {
     background: cornflowerblue;
-    right: -1vh;
+    left: 5vh;
     top: -1vh;
 }
 .marqueur.marqueur-vitesse {
     background: darkseagreen;
     left: -1vh;
-    bottom: -1vh;
+    top: 5vh;
 }
 .marqueur.marqueur-mana {
     background: pink;
-    right: -1vh;
-    bottom: -1vh;
+    left: 5vh;
+    top: 5vh;
+}
+.marqueur.marqueur-niveau {
+    top: 5vh;
+    height: 2vh;
+    left: 2vh;
+    border-radius: 50% 50% 0 0;
+    background: white;
 }
 
 .objet {
@@ -236,7 +244,7 @@ body {
     border-radius: 0.5vh;
 }
 .objet.dragging {
-    border: 2px solid red;
+    border: 2px solid green;
     position: absolute;
     z-index: 1;
 }
@@ -313,6 +321,10 @@ body {
     background-image: url("img/spider.jpeg");
     background-size: cover;
 }
+#presentation.ghost {
+    background-image: url("img/ghost.jpeg");
+    background-size: cover;
+}
 #presentation-message {
     display: inline-block;
     background: bisque;
@@ -378,4 +390,12 @@ body {
 .manuelAventurier {
     background-image: url("img/grimoire.png");
     background-size: cover;
+}
+.dagueRunique {
+    background-image: url("img/dague.png");
+    background-size: cover;
+}
+
+.error {
+    border: solid 2px red;
 }
