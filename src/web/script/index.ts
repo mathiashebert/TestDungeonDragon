@@ -215,13 +215,23 @@ const OBJETS: Objet[] = [
     {
         ... new _Objet("hacheDeGlace", TypeObjet.arme),
         niveau: 1,
-        mouvements: [] // todo
+        mouvements: ["hacheDeGlace_jeter", "hacheDeGlace_bloquer"]
     },
     {
         ... new _Objet("bouclierDeGlace", TypeObjet.arme),
         niveau: 1,
-        mouvements: [] // todo
-    }
+        mouvements: ["bouclierDeGlace_bloquer"]
+    },
+    {
+        ... new _Objet("hacheDeFeu", TypeObjet.arme),
+        niveau: 1,
+        mouvements: ["hacheDeFeu_jeter", "hacheDeFeu_bloquer"]
+    },
+    {
+        ... new _Objet("bouclierDeFeu", TypeObjet.arme),
+        niveau: 1,
+        mouvements: ["bouclierDeFeu_bloquer"]
+    },
 ]
 
 let POSITION_DECOUVERTE:number = 9; // commence à 0
@@ -288,32 +298,32 @@ const POSITIONS: Position[] = [
             attaque: 8,
             defense: 4,
             vitesse: 2,
-            ethere: true
+            ethere: false
         },
         presentation: "hag",
     },
     {
         ... new _Position("position-6"),
-        message: "Vous descendez à la cave. Une ghoule vous aprrçoit, et avance vers vous... lentement...",
+        message: "Vous descendez à la cave. Une ghoule vous aperçoit, et avance vers vous... lentement...",
         tresor: {objets:[], nbPotions: 0, nbRunes:2},
         ennemi: {
             nom: "la ghoule",
             attaque: 6,
             defense: 12,
             vitesse: 0,
-            ethere: true
+            ethere: false
         },
         presentation: "ghoul",
     },
     {
         ... new _Position("position-7"),
         message: "épouvantail",
-        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'épouvantail",
-            attaque: 0,
-            defense: 0,
-            vitesse: 0,
+            attaque: 8,
+            defense: 10,
+            vitesse: 5,
             ethere: false
         },
         presentation: "scarecrow",
@@ -347,7 +357,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-10"),
         message: "Vous arrivez enfin devant le boss final : un vampire",
-        tresor: {objets:[], nbPotions: 0, nbRunes:2},
+        tresor: {objets:[], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le vampire",
             attaque: 30,
@@ -375,6 +385,12 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), defense: 2},
     {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attaque: 1, distance: true},
     {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attaque: 1},
+    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace"), attaque: 1, glace: true, distance: true},
+    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.bloquer, "hacheDeGlace"), defense: 1, glace: true},
+    {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace"), defense: 2, glace: true},
+    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attaque: 1, feu: true, distance: true},
+    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.bloquer, "hacheDeFeu"), defense: 1, feu: true},
+    {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu"), defense: 2, feu: true},
 
 ]
 
@@ -400,11 +416,6 @@ window.onload = function() {
 
         if(target?.getAttribute("id") === "presentation") {
             document.getElementById("scene-presentator").classList.remove("flipped");
-            return;
-        }
-
-        if(target?.getAttribute("id") === "message") {
-            document.getElementById("scene-presentator").classList.add("flipped");
             return;
         }
 
@@ -598,8 +609,6 @@ function mettreDansAssiette(objet: Element, assiette: Element) {
 }
 
 function dessinerPosition() {
-    const message = document.getElementById('message');
-    message.innerHTML = "<- "+POSITION.message;
 
     const pause = document.getElementById("pause-actions");
     pause.innerHTML = '';
@@ -872,6 +881,7 @@ function recalculerAventure() {
 
 
         const index:number = parseInt(position.id.split("-")[1]);
+        document.getElementById(position.id).classList.add(position.presentation);
         if(position.success) {
             document.getElementById(position.id).classList.remove("position-fail");
             document.getElementById(position.id).classList.add("position-success");

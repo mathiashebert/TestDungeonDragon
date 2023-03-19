@@ -8,9 +8,6 @@ body {
     height: 100vh;
     top: 0;
     left: 90vw;
-
-    display: flex;
-    flex-direction: column;
 }
 
 .level {
@@ -19,8 +16,50 @@ body {
     border-radius: 50%;
     margin: auto;
     border: black 2px solid;
+    margin: 1vh 0;
 
 }
+.level.skeleton {
+    background-image: url("img/thumbnail_skeleton.jpeg");
+    background-size: cover;
+}
+.level.zombie {
+    background-image: url("img/thumbnail_zombie.jpeg");
+    background-size: cover;
+}
+.level.spider {
+    background-image: url("img/thumbnail_spider.jpeg");
+    background-size: cover;
+}
+.level.ghost {
+    background-image: url("img/thumbnail_ghost.jpeg");
+    background-size: cover;
+}
+.level.hag {
+    background-image: url("img/thumbnail_hag.jpeg");
+    background-size: cover;
+}
+.level.ghoul {
+    background-image: url("img/thumbnail_ghoul.jpeg");
+    background-size: cover;
+}
+.level.scarecrow {
+    background-image: url("img/thumbnail_scarecrow.jpeg");
+    background-size: cover;
+}
+.level.werewolf {
+    background-image: url("img/thumbnail_werewolf.jpeg");
+    background-size: cover;
+}
+.level.banshee {
+    background-image: url("img/thumbnail_banshee.jpeg");
+    background-size: cover;
+}
+.level.vampire {
+    background-image: url("img/thumbnail_vampire.jpeg");
+    background-size: cover;
+}
+
 
 #scene-presentator {
     width: 90vw;
@@ -81,6 +120,13 @@ body {
     top: 56vh;
     left: 80vw;
     background: darkseagreen;
+}
+.actions-libelle {
+    position: absolute;
+    opacity: 0.3;
+    font-size: 20px;
+    font-weight: 900;
+    text-align: end;
 }
 
 .section {
@@ -421,11 +467,23 @@ body {
 }
 .hacheDeGlace {
     background-image: url("img/hacheDeGlace.png");
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 .bouclierDeGlace {
     background-image: url("img/bouclierDeGlace.png");
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.hacheDeFeu {
+    background-image: url("img/hacheDeFeu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.bouclierDeFeu {
+    background-image: url("img/bouclierDeFeu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .error {
