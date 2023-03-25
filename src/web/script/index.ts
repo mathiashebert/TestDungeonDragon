@@ -63,7 +63,8 @@ enum StatusObjet {
 }
 enum TypeObjet {
     arme = "arme",
-    livre = "livre"
+    livre = "livre",
+    parchemin = "parchemin"
 }
 interface Objet {
     id: string;
@@ -164,6 +165,10 @@ class _Mouvement implements Mouvement {
         this.id = id;
         this.type = type;
         this.objet = objet;
+
+        if(type === TypeMouvement.jeter || type === TypeMouvement.sort) {
+            this.distance = true;
+        }
     }
 
 }
@@ -204,10 +209,6 @@ const OBJETS: Objet[] = [
         mouvements: ["bouclier_bloquer"]
     },
     {
-        ... new _Objet("manuelAventurier", TypeObjet.livre),
-        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"]
-    },
-    {
         ... new _Objet("dagueRunique", TypeObjet.arme),
         niveau: 2,
         mouvements: ["dagueRunique_jeter", "dagueRunique_frapper"]
@@ -231,6 +232,32 @@ const OBJETS: Objet[] = [
         ... new _Objet("bouclierDeFeu", TypeObjet.arme),
         niveau: 1,
         mouvements: ["bouclierDeFeu_bloquer"]
+    },
+
+    {
+        ... new _Objet("manuelAventurier", TypeObjet.livre),
+        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"]
+    },
+    {
+        ... new _Objet("manuelBarbare", TypeObjet.livre),
+        mouvements: ["manuelBarbare_baston"]
+    },
+
+    {
+        ... new _Objet("parcheminProjectileMagique", TypeObjet.parchemin),
+        mouvements: ["parcheminProjectileMagique_sort"]
+    },
+    {
+        ... new _Objet("parcheminMurDeGlace", TypeObjet.parchemin),
+        mouvements: ["parcheminMurDeGlace_sort"]
+    },
+    {
+        ... new _Objet("parcheminBouleDeFeu", TypeObjet.parchemin),
+        mouvements: ["parcheminBouleDeFeu_sort"]
+    },
+    {
+        ... new _Objet("parcheminRapidite", TypeObjet.parchemin),
+        mouvements: ["parcheminRapidite_sort"]
     },
 ]
 
@@ -266,7 +293,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-3"),
         message: "Vous entrez une petite salle remplie de toiles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
-        tresor: {objets:[trouverObjet("dagueRunique")/*, trouverObjet("projectileMagique")*/], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'araiegnée",
             attaque: 6,
@@ -279,7 +306,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-4"),
         message: "Vous avancez dans un long couloir. Un fantôme vous barre la route.",
-        tresor: {objets:[], nbPotions: 1, nbRunes:1},
+        tresor: {objets:[trouverObjet("parcheminRapidite")], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le fantôme",
             attaque: 5,
@@ -292,12 +319,12 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-5"),
         message: "Vous entrez dans la cuisine. Une vieille sorcière s'occupe d'un chaudron fumant",
-        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace")], nbPotions: 2, nbRunes:0},
+        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace")], nbPotions: 2, nbRunes:0},
         ennemi: {
             nom: "la socrière",
-            attaque: 8,
-            defense: 4,
-            vitesse: 2,
+            attaque: 10,
+            defense: 5,
+            vitesse: 3,
             ethere: false
         },
         presentation: "hag",
@@ -308,8 +335,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[], nbPotions: 0, nbRunes:2},
         ennemi: {
             nom: "la ghoule",
-            attaque: 6,
-            defense: 12,
+            attaque: 10,
+            defense: 20,
             vitesse: 0,
             ethere: false
         },
@@ -317,11 +344,11 @@ const POSITIONS: Position[] = [
     },
     {
         ... new _Position("position-7"),
-        message: "épouvantail",
-        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu")], nbPotions: 0, nbRunes:0},
+        message: "Vous sortez dans la court, où un épouvantail terrifiant est posé.",
+        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'épouvantail",
-            attaque: 8,
+            attaque: 12,
             defense: 10,
             vitesse: 5,
             ethere: false
@@ -330,7 +357,7 @@ const POSITIONS: Position[] = [
     },
     {
         ... new _Position("position-8"),
-        message: "Un loup garou",
+        message: "Vous croisez un bonhomme poilu, qui se transforme d'un coup en loup-garoup !",
         tresor: {objets:[], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le loup-garou",
@@ -378,18 +405,26 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), defense: 1},
     {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), vitesse: 1},
     {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), mana: 1},
+    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attaque: 3, defense: 3},
+
+    {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique")},
+    {... new _Mouvement("parcheminMurDeGlace_sort", TypeMouvement.sort, "parcheminMurDeGlace")},
+    {... new _Mouvement("parcheminBouleDeFeu_sort", TypeMouvement.sort, "parcheminBouleDeFeu")},
+    {... new _Mouvement("parcheminRapidite_sort", TypeMouvement.sort, "parcheminRapidite")},
+    {... new _Mouvement("parcheminTelekinesie_sort", TypeMouvement.sort, "parcheminTelekinesie")},
+    {... new _Mouvement("parcheminMetamorphose_sort", TypeMouvement.sort, "parcheminMetamorphose")},
 
     {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attaque: 1, defense: 1},
     {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attaque: 2},
-    {... new _Mouvement("lance_jeter", TypeMouvement.jeter, "lance"), attaque: 2, distance: true},
+    {... new _Mouvement("lance_jeter", TypeMouvement.jeter, "lance"), attaque: 2},
     {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), defense: 2},
-    {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attaque: 1, distance: true},
+    {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attaque: 1},
     {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attaque: 1},
-    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace"), attaque: 1, glace: true, distance: true},
-    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.bloquer, "hacheDeGlace"), defense: 1, glace: true},
+    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace"), attaque: 1, glace: true},
+    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.frapper, "hacheDeGlace"), glace: true},
     {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace"), defense: 2, glace: true},
-    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attaque: 1, feu: true, distance: true},
-    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.bloquer, "hacheDeFeu"), defense: 1, feu: true},
+    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attaque: 1, feu: true},
+    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.frapper, "hacheDeFeu"), feu: true},
     {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu"), defense: 2, feu: true},
 
 ]
@@ -402,7 +437,11 @@ window.oncontextmenu = function() {
     return false;
 }
 window.onload = function() {
-    // find the element that you want to drag.
+
+    document.getElementById("presentation").addEventListener("touchstart", function(e) {
+        document.getElementById("scene-presentator").classList.remove("flipped");
+    });
+
     const body = document.getElementById('body');
 
     body.addEventListener('touchstart', function(e) {
@@ -413,11 +452,6 @@ window.onload = function() {
         const y = touchLocation.pageY ;
 
         const target: any = touchLocation.target;
-
-        if(target?.getAttribute("id") === "presentation") {
-            document.getElementById("scene-presentator").classList.remove("flipped");
-            return;
-        }
 
         // vérifier si c'est un niveau, qui est cliqué
         if(target?.classList?.contains('level')) {
@@ -595,7 +629,6 @@ function mettreDansAssiette(objet: Element, assiette: Element) {
     assiette.prepend(objet);
 
     // on enlève du combat l'ancien mouvement correspondant (si jamais)
-    console.log("ancien mouvement", objet.getAttribute("tdd-mouvement"));
     enleverDuTableau(POSITION.combat, objet.getAttribute("tdd-mouvement"));
     objet.setAttribute("tdd-mouvement", assiette.getAttribute("tdd-mouvement"));
     if(assiette.getAttribute("tdd-mouvement")) {
@@ -629,13 +662,21 @@ function dessinerPosition() {
     const caracteristiqueHero = document.getElementById('caracteristique-hero');
     const caracteristiqueEnnemi = document.getElementById('caracteristique-ennemi');
     resultatMessage.innerHTML = POSITION.resultat.message;
-    caracteristiqueHero.innerHTML =
+
+    document.getElementById("total-attaque-distance-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaqueDistance);
+    document.getElementById("total-attaque-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaque);
+    document.getElementById("total-defense-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.defense);
+
+    document.getElementById("total-defense-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.defense);
+    document.getElementById("total-attaque-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.attaque);
+
+    /*caracteristiqueHero.innerHTML =
         "attaque à distance:"+POSITION.resultat.caracteristiqueHero.attaqueDistance +
         " attaque:"+POSITION.resultat.caracteristiqueHero.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueHero.defense;
-    caracteristiqueEnnemi.innerHTML =
+        " defense:"+POSITION.resultat.caracteristiqueHero.defense;*/
+    /*caracteristiqueEnnemi.innerHTML =
         " attaque:"+POSITION.resultat.caracteristiqueEnnemi.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense;
+        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense;*/
 
     if(POSITION.success) {
         resultat.classList.remove("fail");
@@ -724,7 +765,7 @@ function recalculerAventure() {
                 if(inventaire.nbRunes > 0) {
                     inventaire.nbRunes --;
                     preparation.status = StatusPreparation.preparation_ok;
-                    inventaire.objets.filter(value => value.id === preparation.cible).forEach(value => value.niveau++);
+                    trouverObjetDansInventaire(inventaire, preparation.cible).niveau ++;
                 } else {
                     preparation.status = StatusPreparation.preparation_ko;
                 }
@@ -774,18 +815,19 @@ function recalculerAventure() {
 
         position.resultat.hero = {... hero};
 
+        const baston = position.mouvements.filter(value => value.id === "manuelBarbare_baston").length > 0;
+
         if(position.combat.length === 0) {
             position.resultat.message = "Vous devez combattre "+nomEnnemi;
             position.success = false;
         } else {
             // resoudre le combat
-
             for(let mouvement of MOUVEMENTS) {
                 if(position.combat.indexOf(mouvement.id) > -1) {
                     const objet = trouverObjetDansPosition(position, mouvement.objet);
 
                     // ajouter l'attaque
-                    const effetMouvement: Mouvement = calculerEffetMouvement(objet, mouvement, hero);
+                    const effetMouvement: Mouvement = calculerEffetMouvement(objet, mouvement, hero, caracteristique);
                     position.mouvements.push(effetMouvement);
 
                     // vérifier que l'objet est disponible et qu'on l'utilise une seule fois
@@ -796,7 +838,7 @@ function recalculerAventure() {
                     // enlever les objets utilisés de l'inventaire
                     objet.status = StatusObjet.objet_ko;
 
-                    const magique = objet.niveau > 1 || effetMouvement.feu || effetMouvement.glace;
+                    const magique = objet.niveau > 1;
 
                     // vérifier que si on utilise une arme, elle est magique
                     if(position.ennemi.ethere && objet.type === TypeObjet.arme && !magique) {
@@ -812,10 +854,10 @@ function recalculerAventure() {
                     caracteristique.vitesse += effetMouvement.vitesse;
                     caracteristique.mana += effetMouvement.mana;
 
-                    if(mouvement.feu) {
+                    if(effetMouvement.feu) {
                         ennemi.defense -= (effetMouvement.attaque + effetMouvement.defense);
                     }
-                    if(mouvement.glace) {
+                    if(effetMouvement.glace) {
                         ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
                     }
 
@@ -824,10 +866,25 @@ function recalculerAventure() {
 
                     // on améliore le niveau du livre
                     if(mouvement.type === TypeMouvement.technique) {
-                        inventaire.objets.filter(value => value.id === mouvement.objet).forEach(value => value.niveau++);
+                        trouverObjetDansInventaire(inventaire, mouvement.objet).niveau ++ ;
+                    }
+
+                    // les parchemins sont à usage unique
+                    if(objet.type === TypeObjet.parchemin) {
+                        trouverObjetDansInventaire(inventaire, objet.id).status = StatusObjet.objet_ko;
                     }
 
                 }
+            }
+
+            // cas special de la baston du barabre :
+            if(baston) {
+                if(utilisations.jeter > 0 || utilisations.sort > 0) {
+                    position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
+                    position.success = false;
+                }
+            } else if(trouverObjetDansInventaire(inventaire, "manuelBarbare")){
+                trouverObjetDansInventaire(inventaire, "manuelBarbare").niveau = 1;
             }
 
             let initiative = caracteristique.vitesse - ennemi.vitesse;
@@ -847,14 +904,14 @@ function recalculerAventure() {
                 position.success = false;
             }
 
-            else if(caracteristique.attaqueDistance > ennemi.defense) {
-                position.resultat.message = "Vous dégommez "+nomEnnemi;
-                position.success = true;
-            } else if(ennemi.defense <= 0) {
+            else if(ennemi.defense <= 0) {
                 position.resultat.message = "Vous carbonisez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.attaque <= 0) {
                 position.resultat.message = "Vous congelez "+nomEnnemi;
+                position.success = true;
+            } else if(caracteristique.attaqueDistance > ennemi.defense) {
+                position.resultat.message = "Vous dégommez "+nomEnnemi;
                 position.success = true;
             } else if(ennemi.attaque >= caracteristique.defense) {
                 position.resultat.message = nomEnnemi + " a une attaque trop forte";
@@ -869,13 +926,13 @@ function recalculerAventure() {
 
         }
 
-        // récupérer les armes
-
-        // récupérer le trésor
-        inventaire.nbPotions += position.tresor.nbPotions;
-        inventaire.nbRunes += position.tresor.nbRunes;
-        for(let tresor of position.tresor.objets) {
-            inventaire.objets.push({...tresor});
+        // récupérer le trésor (seulement si on n'a pas de baston)
+        if(!baston) {
+            inventaire.nbPotions += position.tresor.nbPotions;
+            inventaire.nbRunes += position.tresor.nbRunes;
+            for(let tresor of position.tresor.objets) {
+                inventaire.objets.push({...tresor});
+            }
         }
 
 
@@ -922,7 +979,10 @@ function trouverObjet(id: string): Objet {
     return null;
 }
 function trouverObjetDansPosition(position: Position, id: string): Objet {
-    for(let objet of position.inventaire.objets) {
+    return trouverObjetDansInventaire(position.inventaire, id);
+}
+function trouverObjetDansInventaire(inventaire: Inventaire, id: string): Objet {
+    for(let objet of inventaire.objets) {
         if(objet.id === id) {
             return objet;
         }
@@ -1017,7 +1077,10 @@ function ajouterAssiette(mouvement: Mouvement) {
         document.getElementById( TypeMouvement[type] ).prepend(assiette);
 
         const objet: Objet = trouverObjetDansPosition(POSITION, mouvement.objet);
-        const effetMouvement = calculerEffetMouvement(objet, mouvement, POSITION.resultat.hero);
+        const effetMouvement = calculerEffetMouvement(objet, mouvement, POSITION.resultat.hero, POSITION.resultat.caracteristiqueHero);
+        if(POSITION.ennemi.ethere && objet.niveau <= 1 && objet.type === TypeObjet.arme) {
+            effetMouvement.status = StatusMouvement.mouvement_ko;
+        }
         assiette.append(creerMarqueurs(effetMouvement));
 
     } else {
@@ -1036,7 +1099,7 @@ function enleverDuTableau(tableau: string[], element: string) {
     }
 }
 
-function calculerEffetMouvement(objet: Objet, mouvement: Mouvement, hero): Mouvement {
+function calculerEffetMouvement(objet: Objet, mouvement: Mouvement, hero, caracteristique: Caracteristique): Mouvement {
 
     let attaque = mouvement.attaque * objet.niveau;
     let defense = mouvement.defense * objet.niveau;
@@ -1052,6 +1115,24 @@ function calculerEffetMouvement(objet: Objet, mouvement: Mouvement, hero): Mouve
 
     const effetMouvement: Mouvement = {...mouvement};
 
+    // effets speciaux
+    switch (mouvement.id) {
+        case "parcheminProjectileMagique_sort":
+            attaque = caracteristique.mana;
+            break;
+        case "parcheminMurDeGlace_sort":
+            defense = Math.floor(caracteristique.mana/2);
+            effetMouvement.glace = true;
+            break;
+        case "parcheminBouleDeFeu_sort":
+            attaque = Math.floor(caracteristique.mana/2);
+            effetMouvement.feu = true;
+            break;
+        case "parcheminRapidite_sort":
+            vitesse = caracteristique.mana;
+            break;
+    }
+
     effetMouvement.attaque = attaque;
     effetMouvement.defense = defense;
     effetMouvement.vitesse = vitesse;
@@ -1063,11 +1144,17 @@ function calculerEffetMouvement(objet: Objet, mouvement: Mouvement, hero): Mouve
 function creerMarqueurs(mouvement: Mouvement): HTMLDivElement {
     const marqueurs = document.createElement('div');
     marqueurs.classList.add("marqueurs");
+    if(mouvement.status === StatusMouvement.mouvement_ko) {
+        return marqueurs;
+    }
 
     if(mouvement.attaque > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-attaque");
+        if(mouvement.distance) {
+            marqueur.classList.add("marqueur-attaque-distance");
+        }
         marqueur.innerHTML = String(mouvement.attaque);
         marqueurs.append(marqueur);
     }
@@ -1103,5 +1190,12 @@ function choisirPosition(id: string) {
     POSITION = trouverPosition(id);
     document.getElementById("scene-presentator").classList.add("flipped");
     document.getElementById("presentation").className = "face "+POSITION.presentation;
-    document.getElementById("presentation-message").innerHTML = POSITION.message+"<div class='continue'>-></div>";
+    let message = POSITION.message;
+    if(POSITION.ennemi.ethere) {
+        message += "<div class='presentation-alerte'>L'ennemi est éthéré<br>Les armes sans runes n'ont aucun effet sur lui</div>";
+    }
+    message += "<div class='continue'>-></div>";
+    document.getElementById("presentation-message").innerHTML = message;
+
+    document.getElementById("caracteristique-ennemi").className = "level "+POSITION.presentation;
 }

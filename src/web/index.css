@@ -261,6 +261,10 @@ body {
     left: -1vh;
     top: -1vh;
 }
+.marqueur.marqueur-attaque-distance {
+    background: url("img/colimateur.png");
+    background-size: contain ;
+}
 .marqueur.marqueur-defense {
     background: cornflowerblue;
     left: 5vh;
@@ -401,6 +405,12 @@ body {
     border-radius: 2vh;
     padding: 1vh;
 }
+.presentation-alerte {
+    background: red;
+    border: 1px solid;
+    border-radius: 1vh;
+    padding: 1vh;
+}
 
 /* attributs du héro */
 .attribut {
@@ -485,6 +495,26 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
 }
+.parcheminProjectileMagique {
+    background-image: url("img/projecto.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.parcheminMurDeGlace {
+    background-image: url("img/iceWall.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.parcheminBouleDeFeu {
+    background-image: url("img/fireBall.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.parcheminRapidite {
+    background-image: url("img/speed.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
 
 .error {
     border: solid 2px red;
@@ -497,4 +527,48 @@ body {
 }
 .position-unknown {
     display: none;
+}
+
+#caracteristique-hero {
+    position: relative;
+    background: url("img/avatar.jpeg");
+    width: 7vh;
+    height: 7vh;
+    background-size: contain;
+    border-radius: 1vh;
+    float: left;
+    display: inline-block;
+    color: black;
+
+}
+
+#total-attaque-distance-hero {
+    left: 5vh;
+    top: -1vh;
+}
+#total-attaque-hero {
+    left: -1vh;
+    top: -1vh;
+}
+#total-defense-hero {
+    left: -1vh;
+    top: 5vh;
+}
+#caracteristique-ennemi {
+    position: relative;
+    width: 7vh;
+    height: 7vh;
+    background-size: contain;
+    border-radius: 1vh;
+    float: right;
+    display: inline-block;
+    color: black;
+}
+#total-attaque-ennemi {
+    left: -1vh;
+    top: 5vh;
+}
+#total-defense-ennemi {
+    left: -1vh;
+    top: -1vh;
 }
