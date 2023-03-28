@@ -9,6 +9,7 @@ interface Drag {
     element : HTMLElement;
     drag_offset_x: number;
     drag_offset_y: number;
+    time: number;
 }
 
 interface ResultatCombat {
@@ -72,6 +73,7 @@ interface Objet {
     niveau: number;
     type: TypeObjet;
     status: StatusObjet;
+    details: string;
 }
 
 enum StatusMouvement {
@@ -179,6 +181,7 @@ class _Objet implements Objet {
     niveau: number = 1;
     status: StatusObjet = StatusObjet.objet_ok;
     type: TypeObjet;
+    details: "";
 
     constructor(id: string, type: TypeObjet) {
         this.id = id;
@@ -191,77 +194,140 @@ class _Objet implements Objet {
 let DRAG : Drag = {
     drag_offset_x: 0,
     drag_offset_y: 0,
-    element: undefined
+    element: undefined,
+    time: 0,
 }
 
 const OBJETS: Objet[] = [
     {
         ... new _Objet("epee", TypeObjet.arme),
-        mouvements: ["epee_frapper"]
+        mouvements: ["epee_frapper"],
+        details: "L'EPEE" +
+            "<p>L'épée est l'arme classique pour le corps à corps.</p>" +
+            "<p>Elle apporte apporte une attaque de 1, majorée par la force du héro. Elle apporte une défense de 1, majorée par la resistance du héro. Chaque rune ajoute également 1 à l'attaque et à la défense."
     },
     {
         ... new _Objet("lance", TypeObjet.arme),
-        mouvements: ["lance_frapper", "lance_jeter"]
+        mouvements: ["lance_frapper", "lance_jeter"],
+        details: "LA LANCE" +
+            "<p>La lance est une arme offensive efficace.</p>" +
+            "<p>Lorsqu'elle est jetée, elle apporte une attaque de 2, majorée par la force du héro, mais n'apporte pas de défense. Chaque rune ajoute encore 2 à l'attaque.</p>" +
+            "<p>Si vous frappez au corps à corps, elle apporte une attaque de 2 majorée par la force du héro, et une défense égale à la resistance du héro. Chaque rune ajoute encore 2 à l'attaque (mais rien à la défense)."
     },
     {
         ... new _Objet("bouclier", TypeObjet.arme),
         id: "bouclier",
-        mouvements: ["bouclier_bloquer"]
+        mouvements: ["bouclier_bloquer"],
+        details: "LE BOUCLIER" +
+            "<p>Le bouclier est une arme défensive.</p>" +
+            "<p> Il permet de bloquer. Il apporte une défense de 2, majorée par la resistance du héro. Chaque rune ajoute encore 2 à la défense.</p>"
     },
     {
         ... new _Objet("dagueRunique", TypeObjet.arme),
         niveau: 2,
-        mouvements: ["dagueRunique_jeter", "dagueRunique_frapper"]
+        mouvements: ["dagueRunique_jeter", "dagueRunique_frapper"],
+        details: "LA DAGUE RUNIQUE" +
+            "<p>La dague runique possède déjà une rune.</p>" +
+            "<p>Quand on la jette, elle apporte une attaque de 2, majorée par la force du héro. Chaque rune supplémentaire augmente de 1 l'attaque.</p>" +
+            "<p>Quand vous frappez au coprs à corps, elle apporte une attaque de 2, majorée par la force du héro, et une défense égale à la défense du héro. Chaque rune supplémentaire augmente de 1 l'attaque au corps à corps également."
     },
     {
         ... new _Objet("hacheDeGlace", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["hacheDeGlace_jeter", "hacheDeGlace_bloquer"]
+        mouvements: ["hacheDeGlace_jeter", "hacheDeGlace_bloquer"],
+        details: "LA HACHE DE GLACE" +
+            "<p>La hache de glace est une arme magique.</p>" +
+            "<p>Elle peut être jetée, dans ce cas elle apporte une attaque de 1 majorée par la force du héro, et chaque rune ajoute encore 1 à l'attaque.</p>" +
+            "<p>La hache de glace peut également être utilisée au corps à corps, dans ce cas elle apporte une attaque égale à la force du héro, et une défense égale à la resistance du héro. Les runes n'améliorent pas son utilisation au corps à corps.</p>" +
+            "<p>De plus, la valeur de l'attaque (et la défense aussi, pour le corps à corps) diminue d'autant l'attaque de l'ennemi. Si l'attaque de l'ennemi est réduite à 0 (ou moins), l'ennemi est éliminé.</p>"
     },
     {
         ... new _Objet("bouclierDeGlace", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["bouclierDeGlace_bloquer"]
+        mouvements: ["bouclierDeGlace_bloquer"],
+        details: "LE BOUCLIER DE GLACE" +
+            "<p>Le bouclier de glace est un bouclier magique exceptionnel.</p>" +
+            "<p>Il apporte une défense de 2 majorée par la resistance du héro, et chaque rune ajoute encore 2 à la défense.</p>" +
+            "<p>De plus, la valeur de la défense diminue d'autant l'attaque de l'ennemi. Si l'attaque de l'ennemi est réduite à 0 (ou moins), l'ennemi est éliminé.</p>"
     },
     {
         ... new _Objet("hacheDeFeu", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["hacheDeFeu_jeter", "hacheDeFeu_bloquer"]
+        mouvements: ["hacheDeFeu_jeter", "hacheDeFeu_bloquer"],
+        details: "LA HACHE DE FEU" +
+            "<p>La hache de feu est une arme magique.</p>" +
+            "<p>Elle peut être jetée, dans ce cas elle apporte une attaque de 1 majorée par la force du héro, et chaque rune ajoute encore 1 à l'attaque.</p>" +
+            "<p>La hache de feu peut également être utilisée au corps à corps, dans ce cas elle apporte une attaque égale à la force du héro, et une défense égale à la resistance du héro. Les runes n'améliorent pas son utilisation au corps à corps.</p>" +
+            "<p>De plus, la valeur de l'attaque (et la défense aussi, pour le corps à corps) diminue d'autant la défense de l'ennemi. Si la défense de l'ennemi est réduite à 0 (ou moins), l'ennemi est éliminé.</p>"
     },
     {
         ... new _Objet("bouclierDeFeu", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["bouclierDeFeu_bloquer"]
+        mouvements: ["bouclierDeFeu_bloquer"],
+        details: "LE BOUCLIER DE FEU" +
+            "<p>Le bouclier de feu est un bouclier magique exceptionnel.</p>" +
+            "<p>Il apporte une défense de 2 majorée par la resistance du héro, et chaque rune ajoute encore 2 à la défense.</p>" +
+            "<p>De plus, la valeur de la défense diminue d'autant la défense de l'ennemi. Si la défense de l'ennemi est réduite à 0 (ou moins), l'ennemi est éliminé.</p>"
+    },
+    {
+        ... new _Objet("javelot", TypeObjet.arme),
+        niveau: 1,
+        mouvements: ["javelot_jeter"],
+        details: "LE JAVELOT" +
+            "<p>Le javelot est une arme de jet.</p>" +
+            "<p>Quand il est jeté, il apporte une attaque de 3, majorée par la force du héro, et chaque rune ajoute encore 3 à l'attaque.</p>"
     },
 
     {
         ... new _Objet("manuelAventurier", TypeObjet.livre),
-        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"]
+        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
+        details: "LE MANUEL DE L'AVENTURIER" +
+            "<p>Le manuel de l'aventurier est un livre expliquant toutes les tratégies de bases, pour survivre dans un dongeon.</p>" +
+            "<p>Il est assez polyvalent, et vous permettra de vous adapter à chaque situation, en vous apportant au choix 1 en attaque, en defense, en vitesse, ou en mana.</p>" +
+            "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>"
     },
     {
         ... new _Objet("manuelBarbare", TypeObjet.livre),
-        mouvements: ["manuelBarbare_baston"]
+        mouvements: ["manuelBarbare_baston"],
+        details: "LE MANUEL DU BARBARE" +
+            "<p>Le manuel du barabre est un livre simple, avec principalement des illustrations. Il explique clairement des méthodes de combat primitives, mais efficaces, qui ont fait leur preuves au cours des âges, comme par exemple \"frapper fort\".</p>" +
+            "<p>Choisir cette stratégie vous apporte une attaque de 3, une défense de 3 et une vitesse de 3.</p>" +
+            "<p>Cependant, un barabre ne s'interesse qu'à la baston, il ne s'occupe pas de ramasser les objets à la fin du combat. Donc lorsque vous utilisez cette stratégie, vous ne gagnez pas de récompense de combat, et vous ne récupérez pas les armes que vous avez jetées.</p>" +
+            "<p>Autre contrainte : il n'est pas possible de lancer de sort quand vous choisissez une stratégie barbare.</p>" +
+            "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>"
     },
 
     {
         ... new _Objet("parcheminProjectileMagique", TypeObjet.parchemin),
-        mouvements: ["parcheminProjectileMagique_sort"]
+        mouvements: ["parcheminProjectileMagique_sort"],
+        details: "PARCHEMIN DE \"PROJECTILE MAGIQUE\"" +
+            "<p>Le sort \"projectile magique\", est un sort simple, qui permet de faire une attaque à distance, égale à la valeur de mana disponible.</p>" +
+            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminMurDeGlace", TypeObjet.parchemin),
-        mouvements: ["parcheminMurDeGlace_sort"]
+        mouvements: ["parcheminMurDeGlace_sort"],
+        details: "PARCHEMIN DE \"MUR DE GLACE\"" +
+            "<p>Le sort \"mur de glace\", est un sort défensif, qui apporte une défense égale à la valeur de mana disponible divisée par deux, et qui diminue l'attaque de l'ennemi d'autant (si l'attaque de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
+            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminBouleDeFeu", TypeObjet.parchemin),
-        mouvements: ["parcheminBouleDeFeu_sort"]
+        mouvements: ["parcheminBouleDeFeu_sort"],
+        details: "PARCHEMIN DE \"BOULE DE FEU\"" +
+            "<p>Le sort \"boule de feu\", est un sort offensif, qui apporte une attaque égale à la valeur de mana disponible divisée par deux, et qui diminue la defense de l'ennemi d'autant (si la défense de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
+            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminRapidite", TypeObjet.parchemin),
-        mouvements: ["parcheminRapidite_sort"]
+        mouvements: ["parcheminRapidite_sort"],
+        details: "PARCHEMIN \"RAPIDITÉ\"" +
+            "<p>Le sort \"rapidité\", est un sort utilitaire, qui apporte une vitesse égale à la valeur de mana disponible.</p>" +
+            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
 ]
 
-let POSITION_DECOUVERTE:number = 9; // commence à 0
+let POSITION_DECOUVERTE:number = 0; // commence à 0
 
 const POSITIONS: Position[] = [
     {
@@ -293,9 +359,9 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-3"),
         message: "Vous entrez une petite salle remplie de toiles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
-        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique"), trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:0},
         ennemi: {
-            nom: "l'araiegnée",
+            nom: "l'araignée",
             attaque: 6,
             defense: 4,
             vitesse: 2,
@@ -306,7 +372,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-4"),
         message: "Vous avancez dans un long couloir. Un fantôme vous barre la route.",
-        tresor: {objets:[trouverObjet("parcheminRapidite")], nbPotions: 1, nbRunes:1},
+        tresor: {objets:[trouverObjet("parcheminRapidite"), trouverObjet("javelot")], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le fantôme",
             attaque: 5,
@@ -405,7 +471,7 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), defense: 1},
     {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), vitesse: 1},
     {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), mana: 1},
-    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attaque: 3, defense: 3},
+    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attaque: 3, defense: 3, vitesse: 3},
 
     {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique")},
     {... new _Mouvement("parcheminMurDeGlace_sort", TypeMouvement.sort, "parcheminMurDeGlace")},
@@ -426,6 +492,7 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attaque: 1, feu: true},
     {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.frapper, "hacheDeFeu"), feu: true},
     {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu"), defense: 2, feu: true},
+    {... new _Mouvement("javelot_jeter", TypeMouvement.jeter, "javelot"), attaque: 3},
 
 ]
 
@@ -440,7 +507,21 @@ window.onload = function() {
 
     document.getElementById("presentation").addEventListener("touchstart", function(e) {
         document.getElementById("scene-presentator").classList.remove("flipped");
+        e.stopPropagation();
     });
+    document.getElementById("resultat").addEventListener("touchstart", function(e) {
+        if(POSITION.success) {
+            const index:number = parseInt(POSITION.id.split("-")[1]);
+            choisirPosition("position-"+(index+1));
+            setTimeout(dessinerPosition, 1000);
+            e.stopPropagation();
+        }
+
+    });
+    document.getElementById("overlay").addEventListener("touchstart", function(e) {
+        document.getElementById("overlay").classList.remove("actif");
+    });
+
 
     const body = document.getElementById('body');
 
@@ -474,6 +555,7 @@ window.onload = function() {
                 o.style.left = (x - DRAG.drag_offset_x) + 'px';
                 o.style.top = (y - DRAG.drag_offset_y) + 'px';
                 DRAG.element = o;
+                DRAG.time = new Date().getTime();
 
                 const objetReference = o.getAttribute("tdd-objet");
                 if(objetReference === 'potion') {
@@ -557,6 +639,12 @@ window.onload = function() {
 
     body.addEventListener('touchend', function(e) {
         if (!DRAG.element) return;
+
+        if(new Date().getTime() - DRAG.time < 500) {
+            // toucher court
+            document.getElementById("overlay").classList.add("actif");
+            afficherDetails(DRAG.element.getAttribute("tdd-objet"));
+        }
 
         let assiettes = document.getElementsByClassName("assiette-hover");
         if(assiettes.length > 0) {
@@ -656,13 +744,7 @@ function dessinerPosition() {
     document.getElementById("attribut-vitesse").innerHTML = String(POSITION.resultat.hero.vitesse);
     document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.mana);
 
-    // ecrire le resultat
-    const resultat = document.getElementById('resultat');
-    const resultatMessage = document.getElementById('resultat-message');
-    const caracteristiqueHero = document.getElementById('caracteristique-hero');
-    const caracteristiqueEnnemi = document.getElementById('caracteristique-ennemi');
-    resultatMessage.innerHTML = POSITION.resultat.message;
-
+    // écrire les totaux
     document.getElementById("total-attaque-distance-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaqueDistance);
     document.getElementById("total-attaque-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaque);
     document.getElementById("total-defense-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.defense);
@@ -670,14 +752,10 @@ function dessinerPosition() {
     document.getElementById("total-defense-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.defense);
     document.getElementById("total-attaque-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.attaque);
 
-    /*caracteristiqueHero.innerHTML =
-        "attaque à distance:"+POSITION.resultat.caracteristiqueHero.attaqueDistance +
-        " attaque:"+POSITION.resultat.caracteristiqueHero.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueHero.defense;*/
-    /*caracteristiqueEnnemi.innerHTML =
-        " attaque:"+POSITION.resultat.caracteristiqueEnnemi.attaque +
-        " defense:"+POSITION.resultat.caracteristiqueEnnemi.defense;*/
-
+    // ecrire le resultat
+    const resultat = document.getElementById('resultat');
+    const resultatMessage = document.getElementById('resultat-message');
+    resultatMessage.innerHTML = POSITION.resultat.message + "<div class='continue'>-></div>";
     if(POSITION.success) {
         resultat.classList.remove("fail");
         resultat.classList.add("success");
@@ -815,7 +893,7 @@ function recalculerAventure() {
 
         position.resultat.hero = {... hero};
 
-        const baston = position.mouvements.filter(value => value.id === "manuelBarbare_baston").length > 0;
+        const baston = position.combat.filter(value => value === "manuelBarbare_baston").length > 0;
 
         if(position.combat.length === 0) {
             position.resultat.message = "Vous devez combattre "+nomEnnemi;
@@ -877,16 +955,6 @@ function recalculerAventure() {
                 }
             }
 
-            // cas special de la baston du barabre :
-            if(baston) {
-                if(utilisations.jeter > 0 || utilisations.sort > 0) {
-                    position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
-                    position.success = false;
-                }
-            } else if(trouverObjetDansInventaire(inventaire, "manuelBarbare")){
-                trouverObjetDansInventaire(inventaire, "manuelBarbare").niveau = 1;
-            }
-
             let initiative = caracteristique.vitesse - ennemi.vitesse;
             if(initiative <= 0) initiative = 0;
 
@@ -901,6 +969,12 @@ function recalculerAventure() {
                 position.success = false;
             } else if(initiative < utilisations.jeter) {
                 position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+initiative+" mouvement jeter";
+                position.success = false;
+            }
+
+            // cas special de la baston du barabre :
+            else if(baston && utilisations.sort > 0) {
+                position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
                 position.success = false;
             }
 
@@ -923,11 +997,17 @@ function recalculerAventure() {
                 position.resultat.message = "Vous écrasez "+nomEnnemi;
                 position.success = true;
             }
-
         }
 
         // récupérer le trésor (seulement si on n'a pas de baston)
-        if(!baston) {
+        // si on est bastpn, on ne récupère même pas ce qu'on a lancé
+        if(baston) {
+            for(let mouvement of position.mouvements) {
+                if(mouvement.type === TypeMouvement.jeter) {
+                    trouverObjetDansInventaire(inventaire, mouvement.objet).status = StatusObjet.objet_ko;
+                }
+            }
+        } else {
             inventaire.nbPotions += position.tresor.nbPotions;
             inventaire.nbRunes += position.tresor.nbRunes;
             for(let tresor of position.tresor.objets) {
@@ -1044,7 +1124,6 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
         if(preparation.status !== StatusPreparation.preparation_ok) {
             objet.classList.add('error');
         }
-        objet.innerHTML=preparation.id;
     }
 
     const reference: Objet = trouverObjetDansPosition(POSITION, classe);
@@ -1197,5 +1276,27 @@ function choisirPosition(id: string) {
     message += "<div class='continue'>-></div>";
     document.getElementById("presentation-message").innerHTML = message;
 
-    document.getElementById("caracteristique-ennemi").className = "level "+POSITION.presentation;
+    document.getElementById("caracteristique-ennemi").className = "thumbnail "+POSITION.presentation;
+}
+
+function afficherDetails(cible: string) {
+
+    let details = "";
+    if(cible === "potion") {
+        details = "POTION" +
+            "<p>Vous pouvez faire glisser une potion sur l'un des 4 attributs du héro, pour l'augmenter de 1 point.</p>" +
+            "<p>L'effet d'une potion perdure jusqu'à la fin de la partie. Nh'esitez pas à adapter votre stratégie en fonction des attributs que vous avez favorisés.</p>" +
+            "<p>Une potion est à usage unique. Si vous l'utilisez sur un attribut, avant un combat, vous ne pourrez pas l'utiliser ultérieurement sur un autre attribut.</p>";
+    } else if (cible === "rune") {
+        details = "RUNE" +
+            "<p>Vous pouvez faire glisser une rune jusqu'à une arme pour l'améliorer. Vérifiez les détails de l'arme pour vérifier les effet des runes.</p>" +
+            "<p>L'effet d'une rune perdure jusqu'à la fin de la partie. N'hesitez pas à ré-utiliser une arme améliorée, dans le plus de combats possibles.</p>" +
+            "<p>Une rune est à usage unique. Si vous l'utilisez sur une arme, avant un combat, vous ne pourrez pas l'utiliser ultérieurement sur une autre arme.</p>";
+    } else {
+        const objet: Objet = trouverObjet(cible);
+        details = objet.details;
+    }
+
+
+    document.getElementById("details").innerHTML = details;
 }

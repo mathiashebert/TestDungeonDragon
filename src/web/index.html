@@ -14,20 +14,21 @@
     <body id="body">
 
     <div class="levels">
-
-        <div class="level" id="position-1"></div>
-        <div class="level" id="position-2"></div>
-        <div class="level" id="position-3"></div>
-        <div class="level" id="position-4"></div>
-        <div class="level" id="position-5"></div>
-        <div class="level" id="position-6"></div>
-        <div class="level" id="position-7"></div>
-        <div class="level" id="position-8"></div>
-        <div class="level" id="position-9"></div>
-        <div class="level" id="position-10"></div>
-
+        <div class="level thumbnail" id="position-1"></div>
+        <div class="level thumbnail" id="position-2"></div>
+        <div class="level thumbnail" id="position-3"></div>
+        <div class="level thumbnail" id="position-4"></div>
+        <div class="level thumbnail" id="position-5"></div>
+        <div class="level thumbnail" id="position-6"></div>
+        <div class="level thumbnail" id="position-7"></div>
+        <div class="level thumbnail" id="position-8"></div>
+        <div class="level thumbnail" id="position-9"></div>
+        <div class="level thumbnail" id="position-10"></div>
     </div>
 
+    <div id="overlay">
+        <div id="details"></div>
+    </div>
 
     <div id="scene-presentator" class="flipped">
         <div class="double-faced">
@@ -43,9 +44,7 @@
                         <div class="attribut" tdd-attribut="vitesse"><span class="vitesse"></span><span id="attribut-vitesse"></span></div>
                         <div class="attribut" tdd-attribut="mana"><span class="mana"></span><span id="attribut-mana"></span></div>
                     </div>
-                    <div id="pause-actions">
-
-                    </div>
+                    <div id="pause-actions"></div>
 
                 </div>
 
@@ -63,11 +62,8 @@
                     <div class="actions" id="frapper"></div>
                 </div>
 
-                <div class="section" id="resultat">
-
-                    <div></div>
-                    <div></div>
-                    <div id="caracteristique-hero" class="level">
+                <div class="section" id="total">
+                    <div id="caracteristique-hero" class="thumbnail">
                         <div id="total-attaque-distance-hero" class="marqueur marqueur-attaque marqueur-attaque-distance"></div>
                         <div id="total-attaque-hero" class="marqueur marqueur-attaque"></div>
                         <div id="total-defense-hero" class="marqueur marqueur-defense"></div>
@@ -76,13 +72,14 @@
                         <div id="total-attaque-ennemi" class="marqueur marqueur-attaque"></div>
                         <div id="total-defense-ennemi" class="marqueur marqueur-defense"></div>
                     </div>
-                    <div id="resultat-message"></div>
                 </div>
-                <div class="section" id="tresor"></div>
+                <div class="section" id="resultat">
+                    <div id="resultat-message"></div>
+                    <div id="tresor"></div>
+                </div>
 
             </div>
         </div>
-
     </div>
 
     </body>

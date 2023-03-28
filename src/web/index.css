@@ -10,56 +10,72 @@ body {
     left: 90vw;
 }
 
-.level {
+.thumbnail {
     height: 7vh;
     width: 7vh;
     border-radius: 50%;
     margin: auto;
     border: black 2px solid;
     margin: 1vh 0;
-
+    background-size: cover;
 }
-.level.skeleton {
+.thumbnail.skeleton {
     background-image: url("img/thumbnail_skeleton.jpeg");
-    background-size: cover;
 }
-.level.zombie {
+.thumbnail.zombie {
     background-image: url("img/thumbnail_zombie.jpeg");
-    background-size: cover;
 }
-.level.spider {
+.thumbnail.spider {
     background-image: url("img/thumbnail_spider.jpeg");
-    background-size: cover;
 }
-.level.ghost {
+.thumbnail.ghost {
     background-image: url("img/thumbnail_ghost.jpeg");
-    background-size: cover;
 }
-.level.hag {
+.thumbnail.hag {
     background-image: url("img/thumbnail_hag.jpeg");
-    background-size: cover;
 }
-.level.ghoul {
+.thumbnail.ghoul {
     background-image: url("img/thumbnail_ghoul.jpeg");
-    background-size: cover;
 }
-.level.scarecrow {
+.thumbnail.scarecrow {
     background-image: url("img/thumbnail_scarecrow.jpeg");
-    background-size: cover;
 }
-.level.werewolf {
+.thumbnail.werewolf {
     background-image: url("img/thumbnail_werewolf.jpeg");
-    background-size: cover;
 }
-.level.banshee {
+.thumbnail.banshee {
     background-image: url("img/thumbnail_banshee.jpeg");
-    background-size: cover;
 }
-.level.vampire {
+.thumbnail.vampire {
     background-image: url("img/thumbnail_vampire.jpeg");
-    background-size: cover;
 }
 
+#overlay {
+    display: none;
+    width: 90vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: scroll;
+    background: rgba(0, 0, 0, 0);
+    transition: all 1.0s linear;
+    z-index: 2;
+}
+#overlay.actif {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+}
+#details {
+    width: 70vw;
+    height: 80vh;
+    overflow: scroll;
+    margin: auto;
+    background: bisque;
+    border-radius: 3vh;
+    text-align: justify;
+    padding: 2vh;
+}
 
 #scene-presentator {
     width: 90vw;
@@ -108,6 +124,11 @@ body {
 }
 .continue {
     text-align: right;
+    display: inline-block;
+    float: right;
+}
+.section.fail .continue {
+    visibility: hidden;
 }
 
 #jeter-marqueur-initiative {
@@ -230,11 +251,25 @@ body {
 #combat {
     height: 40vh;
 }
+#total {
+    height: 10vh;
+}
 #resultat {
     height: 9vh;
 }
 #tresor {
-    height: 5vh;
+    display: none;
+}
+.section.success #tresor {
+    display: block;
+}
+.section.success #tresor .action.fantome {
+    width: 4vh;
+    height: 4vh;
+}
+.section.success #tresor .action.fantome * {
+    width: 4vh;
+    height: 4vh;
 }
 
 .section:last-child {
@@ -406,10 +441,7 @@ body {
     padding: 1vh;
 }
 .presentation-alerte {
-    background: red;
-    border: 1px solid;
-    border-radius: 1vh;
-    padding: 1vh;
+    color: red;
 }
 
 /* attributs du héro */
@@ -468,7 +500,19 @@ body {
     background-size: cover;
 }
 .manuelAventurier {
-    background-image: url("img/grimoire.png");
+    background-image: url("img/livre0.png");
+    background-size: cover;
+}
+.manuelBarbare {
+    background-image: url("img/livre1.png");
+    background-size: cover;
+}
+.manuelMage {
+    background-image: url("img/livre2.png");
+    background-size: cover;
+}
+.manuelVoleur {
+    background-image: url("img/livre3.png");
     background-size: cover;
 }
 .dagueRunique {
@@ -492,6 +536,11 @@ body {
 }
 .bouclierDeFeu {
     background-image: url("img/bouclierDeFeu.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.javelot {
+    background-image: url("img/javelot.png");
     background-size: contain;
     background-repeat: no-repeat;
 }
