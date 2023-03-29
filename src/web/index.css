@@ -291,6 +291,10 @@ body {
     text-align: center;
     border: 1px solid black;
 }
+.incantation .marqueur {
+    background: white !important;
+    border-style: dashed;
+}
 .marqueur.marqueur-attaque {
     background: indianred;
     left: -1vh;
@@ -322,6 +326,21 @@ body {
     border-radius: 50% 50% 0 0;
     background: white;
 }
+.marqueur.marqueur-charme {
+    background: url(img/potion.png);
+    background-size: contain;
+    top: 1.5vh;
+    left: 1.5vh;
+    border-radius: 50%;
+}
+.marqueur.marqueur-enchantement {
+    background: url(img/rune.png);
+    background-size: contain;
+    top: 1.5vh;
+    left: 1.5vh;
+    border-radius: 50%;
+}
+
 
 .objet {
     height: 7vh;
