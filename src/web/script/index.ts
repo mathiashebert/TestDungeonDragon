@@ -427,7 +427,7 @@ const POSITIONS: Position[] = [
         message: "Vous entrez dans la cuisine. Une vieille sorcière s'occupe d'un chaudron fumant",
         tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("manuelMage")], nbPotions: 2, nbRunes:0},
         ennemi: {
-            nom: "la socrière",
+            nom: "la sorcière",
             attaque: 10,
             defense: 5,
             vitesse: 3,
@@ -552,6 +552,8 @@ window.oncontextmenu = function() {
     return false;
 }
 window.onload = function() {
+
+    document.documentElement.requestFullscreen();
 
     document.getElementById("presentation").addEventListener("touchstart", function(e) {
         document.getElementById("scene-presentator").classList.remove("flipped");
