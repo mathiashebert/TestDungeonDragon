@@ -530,6 +530,10 @@ body {
     background-image: url("img/livre2.png");
     background-size: cover;
 }
+.charme {
+    background-image: url("img/pentacle.png");
+    background-size: cover;
+}
 .manuelVoleur {
     background-image: url("img/livre3.png");
     background-size: cover;
@@ -565,6 +569,11 @@ body {
 }
 .parcheminProjectileMagique {
     background-image: url("img/projecto.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+.parcheminProtection {
+    background-image: url("img/protecto.jpeg");
     background-size: contain;
     background-repeat: no-repeat;
 }
@@ -639,4 +648,17 @@ body {
 #total-defense-ennemi {
     left: -1vh;
     top: -1vh;
+}
+
+.marqueur.marqueur-feu {
+    background: url("img/feu.png") !important;
+    background-size: cover !important;
+    top: 1.5vh;
+    left: 5vh;
+}
+.marqueur.marqueur-glace {
+    background: url("img/glace.png") !important;
+    background-size: cover !important;
+    top: 1.5vh;
+    left: -0.5vh;
 }
