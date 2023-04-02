@@ -95,7 +95,10 @@ interface Caracteristique {
     attaque: number,
     defense: number,
     mana: number,
-    vitesse: number
+    vitesse: number,
+    initiative: number,
+
+    sournois: boolean,
 }
 
 interface Valeur {
@@ -144,8 +147,8 @@ class _Position implements Position {
     resultat: ResultatCombat = {
         message: "",
         hero: {force: 1, endurance: 1, vitesse: 1, mana: 1},
-        caracteristiqueHero: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0},
-        caracteristiqueEnnemi: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0}
+        caracteristiqueHero: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0, initiative: 0, sournois: false},
+        caracteristiqueEnnemi: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0, initiative: 0, sournois: false}
     };
     success: boolean = false;
     tresor: Inventaire;
@@ -316,6 +319,16 @@ const OBJETS: Objet[] = [
             "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>" +
             "<p>Par contre, vous ne disposez qu'une seule main libre au corps à corps, lorsque vous utilisez le manuel du mage</p>"
     },
+    {
+        ... new _Objet("manuelVoleur", TypeObjet.livre),
+        mouvements: ["manuelVoleur_attaqueSournoise"],
+        details: "LE MANUEL DU VOLEUR" +
+            "<p>Le manuel du voleur est un livre détaillant avec précision comment se faufiller dans un dongeon ou derrière un ennemi... et faire ce qu'il faut !</p>" +
+            "<p>Le manuel du voleur vous donne dla possibilité de faire une attaque sournoise. L'avantage principale est que votre attaque est doublée !</p>" +
+            "<p>Vous ne pouvez pas utiliser de parchemin, ni de bouclier</p>" +
+            "<p>Vous avez automatiquement la possibilité de jeter une (et une seule arme), quelque soit votre vitesse ou celle de l'adversaire</p>" +
+            "<p>La première fois que vous faites une attaque sournoise, vous ne pouvez utiliser qu'une seule arme. La deuxième fois, vous pouvez en utiliser deux (etc...)</p>"
+    },
 
     {
         ... new _Objet("parcheminProjectileMagique", TypeObjet.parchemin),
@@ -354,7 +367,7 @@ const OBJETS: Objet[] = [
     },
 ]
 
-let POSITION_DECOUVERTE:number = 9; // commence à 0
+let POSITION_DECOUVERTE:number = 0; // commence à 0
 
 const POSITIONS: Position[] = [
     {
@@ -451,7 +464,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-8"),
         message: "Vous croisez un bonhomme poilu, qui se transforme d'un coup en loup-garoup !",
-        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("manuelVoleur")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le loup-garou",
             attaque: 15,
@@ -499,6 +512,7 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), vitesse: 1},
     {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), mana: 1},
     {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attaque: 3, defense: 3, vitesse: 3},
+    {... new _Mouvement("manuelVoleur_attaqueSournoise", TypeMouvement.technique, "manuelVoleur")},
 
     {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique")},
     {... new _Mouvement("parcheminProjectileMagique_incantation", TypeMouvement.incantation, "parcheminProjectileMagique")},
@@ -824,7 +838,7 @@ function dessinerPosition() {
 
 
     // dessiner le combat
-    const initiative = POSITION.resultat.caracteristiqueHero.vitesse - POSITION.resultat.caracteristiqueEnnemi.vitesse;
+    const initiative = POSITION.resultat.caracteristiqueHero.initiative;
     document.getElementById("jeter-marqueur-initiative").innerHTML = String(initiative);
 
     const technique = document.getElementById('technique');
@@ -945,7 +959,9 @@ function recalculerAventure() {
             attaque: 0,
             defense: 0,
             mana: hero.mana,
-            vitesse: hero.vitesse
+            vitesse: hero.vitesse,
+            initiative: 0,
+            sournois: false,
         }
 
         const ennemi: Caracteristique = {
@@ -953,7 +969,9 @@ function recalculerAventure() {
             attaque: position.ennemi.attaque,
             defense: position.ennemi.defense,
             mana: 0,
-            vitesse: position.ennemi.vitesse
+            vitesse: position.ennemi.vitesse,
+            initiative: 0,
+            sournois: false,
         };
         const nomEnnemi = position.ennemi.nom;
 
@@ -974,6 +992,8 @@ function recalculerAventure() {
         position.resultat.hero = {... hero};
 
         const baston = position.combat.filter(value => value === "manuelBarbare_baston").length > 0;
+        const attaqueSournoise = position.combat.filter(value => value === "manuelVoleur_attaqueSournoise").length > 0;
+        caracteristique.sournois = attaqueSournoise;
 
         // traiter les charmes
         position.charmes = [];
@@ -997,155 +1017,172 @@ function recalculerAventure() {
             }
         }
 
+        // resoudre le combat
+        for(let mouvement of MOUVEMENTS) {
+            if(position.combat.indexOf(mouvement.id) > -1) {
+                const objet = trouverObjetDansPosition(position, mouvement.objet);
+
+                // ajouter l'attaque
+                const effetMouvement: Mouvement = calculerEffetMouvement(position, mouvement, caracteristique);
+                position.mouvements.push(effetMouvement);
+
+                // vérifier que l'objet est disponible et qu'on l'utilise une seule fois
+                if(objet.status !== StatusObjet.objet_ok) {
+                    effetMouvement.status = StatusMouvement.mouvement_ko;
+                    continue;
+                }
+                // enlever les objets utilisés de l'inventaire
+                objet.status = StatusObjet.objet_ko;
+
+                // cas spécial des incantations : elles ne sont pas ajoutées à la caractéristiques
+                // car elles sont prise en compte directement dans le manuel
+                if(mouvement.type === TypeMouvement.incantation) {
+                    utilisations[ TypeMouvement[mouvement.type] ] ++;
+                    continue;
+                }
+
+                // vérifier que si on utilise une arme contre un ennemi éthéré, elle est magique
+                if(position.ennemi.ethere && objet.type === TypeObjet.arme && objet.niveau <= 1) {
+                    effetMouvement.status = StatusMouvement.mouvement_ko;
+                    continue;
+                }
+
+                // cas special du manuel du mage : charme qui necessite une potion
+                if(mouvement.id === "manuelMage_charme" && charme_status === StatusMouvement.mouvement_ko) {
+                    effetMouvement.status = StatusMouvement.mouvement_ko;
+                    continue;
+                }
+                if(mouvement.id === "manuelMage_charme") {
+                    const charme: Charme = {
+                        id: 'charme',
+                        attaque: effetMouvement.attaque,
+                        defense: effetMouvement.defense,
+                        vitesse: effetMouvement.vitesse,
+                        mana: effetMouvement.mana,
+                        feu: effetMouvement.feu,
+                        glace: effetMouvement.glace,
+                        distance: true,
+                        duree: objet.niveau,
+                        status: StatusMouvement.mouvement_ok,
+                    }
+                    charmes.push(charme);
+                }
+                // cas special du manuel du mage : enchantement qui necessite une rune
+                if(mouvement.id === "manuelMage_enchantement" && enchantement_status === StatusMouvement.mouvement_ko) {
+                    effetMouvement.status = StatusMouvement.mouvement_ko;
+                    continue;
+                }
+                if(mouvement.id === "manuelMage_enchantement") {
+                    enchantement = {...effetMouvement};
+                    effetMouvement.attaque = 0;
+                    effetMouvement.defense = 0;
+                    effetMouvement.mana = 0;
+                    effetMouvement.vitesse = 0;
+                }
+                if(enchantement && (effetMouvement.type === TypeMouvement.bloquer || effetMouvement.type === TypeMouvement.frapper)) {
+                    fusionnerMouvement(effetMouvement, enchantement);
+                }
+
+                if(effetMouvement.distance) {
+                    caracteristique.attaqueDistance += effetMouvement.attaque;
+                }
+                caracteristique.attaque += effetMouvement.attaque;
+                caracteristique.defense += effetMouvement.defense;
+                caracteristique.vitesse += effetMouvement.vitesse;
+                caracteristique.mana += effetMouvement.mana;
+
+                if(effetMouvement.feu) {
+                    ennemi.defense -= (effetMouvement.attaque + effetMouvement.defense);
+                }
+                if(effetMouvement.glace) {
+                    ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
+                }
+
+                // on compte le nombre d'utilisation de chaque type
+                utilisations[ TypeMouvement[mouvement.type] ] ++;
+
+                // on améliore le niveau du livre
+                if(mouvement.type === TypeMouvement.technique) {
+                    trouverObjetDansInventaire(inventaire, mouvement.objet).niveau ++ ;
+                }
+
+                // les parchemins sont à usage unique
+                if(objet.type === TypeObjet.parchemin) {
+                    trouverObjetDansInventaire(inventaire, objet.id).status = StatusObjet.objet_ko;
+                }
+
+            }
+        }
+
+        caracteristique.initiative = caracteristique.vitesse - ennemi.vitesse;
+
+        if(attaqueSournoise) {
+            caracteristique.initiative = 1;
+        }
+
+        const niveauVoleur = trouverObjetDansInventaire(inventaire, "manuelVoleur")?.niveau-1;
+        const niveauMage = trouverObjetDansInventaire(inventaire, "manuelMage")?.niveau-1;
+
         if(position.combat.length === 0 && caracteristique.attaque === 0) {
             position.resultat.message = "Vous devez combattre "+nomEnnemi;
             position.success = false;
+        }
+        else if(attaqueSournoise && utilisations.bloquer > 0) {
+            position.resultat.message = "En cas d'attaque sournoise, vous ne pouvez pas utiliser de bouclier";
+            position.success = false;
+        }
+        else if(attaqueSournoise && utilisations.sort > 0) {
+            position.resultat.message = "En cas d'attaque sournoise, vous ne pouvez pas utiliser de parchemin";
+            position.success = false;
+        }
+        else if(attaqueSournoise && (utilisations.jeter + utilisations.frapper) > niveauVoleur) {
+            position.resultat.message = "Pour l'instant, vous ne pouvez utiliser que " + niveauVoleur + " arme(s) pour votre attaque sournoise";
+            position.success = false;
+        }
+        else if(enchantement_status === StatusMouvement.mouvement_ok && utilisations.incantation > niveauMage) {
+            position.resultat.message = "Pour l'instant, vous ne pouvez utiliser que " + niveauMage + " parchemin(s) dans votre enchantement";
+            position.success = false;
+        } else if( (enchantement_status === StatusMouvement.mouvement_ok || charme_status === StatusMouvement.mouvement_ok) && utilisations.bloquer + utilisations.frapper > 1 ) {
+            position.resultat.message = "Quand vous faites de la magie, vous ne pouvez utiliser qu'un seul mouvements de mélée";
+            position.success = false;
+        } else if(utilisations.bloquer + utilisations.frapper > 2) {
+            position.resultat.message = "Vous n'avez que 2 mains, vous ne pouvez utiliser que 2 mouvements de mélée";
+            position.success = false;
+        } else if(utilisations.technique > 1) {
+            position.resultat.message = "Vous ne pouvez utiliser qu'une seule technique";
+            position.success = false;
+        } else if(utilisations.jeter > 0 && caracteristique.initiative <= 0) {
+            position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez rien jeter";
+            position.success = false;
+        } else if(utilisations.jeter > 0 && caracteristique.initiative < utilisations.jeter) {
+            position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+caracteristique.initiative+" mouvement jeter";
+            position.success = false;
+        }
+
+        // cas special de la baston du barabre :
+        else if(baston && utilisations.sort > 0) {
+            position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
+            position.success = false;
+        }
+
+        else if(ennemi.defense <= 0) {
+            position.resultat.message = "Vous carbonisez "+nomEnnemi;
+            position.success = true;
+        } else if(ennemi.attaque <= 0) {
+            position.resultat.message = "Vous congelez "+nomEnnemi;
+            position.success = true;
+        } else if(caracteristique.attaqueDistance > ennemi.defense) {
+            position.resultat.message = "Vous dégommez "+nomEnnemi;
+            position.success = true;
+        } else if(ennemi.attaque >= caracteristique.defense) {
+            position.resultat.message = nomEnnemi + " a une attaque trop forte";
+            position.success = false;
+        } else if(ennemi.defense >= caracteristique.attaque) {
+            position.resultat.message = nomEnnemi + " a une defense trop forte";
+            position.success = false;
         } else {
-            // resoudre le combat
-            for(let mouvement of MOUVEMENTS) {
-                if(position.combat.indexOf(mouvement.id) > -1) {
-                    const objet = trouverObjetDansPosition(position, mouvement.objet);
-
-                    // ajouter l'attaque
-                    const effetMouvement: Mouvement = calculerEffetMouvement(position, mouvement, caracteristique);
-                    position.mouvements.push(effetMouvement);
-
-                    // vérifier que l'objet est disponible et qu'on l'utilise une seule fois
-                    if(objet.status !== StatusObjet.objet_ok) {
-                        effetMouvement.status = StatusMouvement.mouvement_ko;
-                        continue;
-                    }
-                    // enlever les objets utilisés de l'inventaire
-                    objet.status = StatusObjet.objet_ko;
-
-                    // cas spécial des incantations : elles ne sont pas ajoutées à la caractéristiques
-                    // car elles sont prise en compte directement dans le manuel
-                    if(mouvement.type === TypeMouvement.incantation) {
-                        utilisations[ TypeMouvement[mouvement.type] ] ++;
-                        continue;
-                    }
-
-                    // vérifier que si on utilise une arme contre un ennemi éthéré, elle est magique
-                    if(position.ennemi.ethere && objet.type === TypeObjet.arme && objet.niveau <= 1) {
-                        effetMouvement.status = StatusMouvement.mouvement_ko;
-                        continue;
-                    }
-
-                    // cas special du manuel du mage : charme qui necessite une potion
-                    if(mouvement.id === "manuelMage_charme" && charme_status === StatusMouvement.mouvement_ko) {
-                        effetMouvement.status = StatusMouvement.mouvement_ko;
-                        continue;
-                    }
-                    if(mouvement.id === "manuelMage_charme") {
-                        const charme: Charme = {
-                            id: 'charme',
-                            attaque: effetMouvement.attaque,
-                            defense: effetMouvement.defense,
-                            vitesse: effetMouvement.vitesse,
-                            mana: effetMouvement.mana,
-                            feu: effetMouvement.feu,
-                            glace: effetMouvement.glace,
-                            distance: true,
-                            duree: objet.niveau,
-                            status: StatusMouvement.mouvement_ok,
-                        }
-                        charmes.push(charme);
-                    }
-                    // cas special du manuel du mage : enchantement qui necessite une rune
-                    if(mouvement.id === "manuelMage_enchantement" && enchantement_status === StatusMouvement.mouvement_ko) {
-                        effetMouvement.status = StatusMouvement.mouvement_ko;
-                        continue;
-                    }
-                    if(mouvement.id === "manuelMage_enchantement") {
-                        enchantement = {...effetMouvement};
-                        effetMouvement.attaque = 0;
-                        effetMouvement.defense = 0;
-                        effetMouvement.mana = 0;
-                        effetMouvement.vitesse = 0;
-                    }
-                    if(enchantement && (effetMouvement.type === TypeMouvement.bloquer || effetMouvement.type === TypeMouvement.frapper)) {
-                        fusionnerMouvement(effetMouvement, enchantement);
-                    }
-
-                    if(effetMouvement.distance) {
-                        caracteristique.attaqueDistance += effetMouvement.attaque;
-                    }
-                    caracteristique.attaque += effetMouvement.attaque;
-                    caracteristique.defense += effetMouvement.defense;
-                    caracteristique.vitesse += effetMouvement.vitesse;
-                    caracteristique.mana += effetMouvement.mana;
-
-                    if(effetMouvement.feu) {
-                        ennemi.defense -= (effetMouvement.attaque + effetMouvement.defense);
-                    }
-                    if(effetMouvement.glace) {
-                        ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
-                    }
-
-                    // on compte le nombre d'utilisation de chaque type
-                    utilisations[ TypeMouvement[mouvement.type] ] ++;
-
-                    // on améliore le niveau du livre
-                    if(mouvement.type === TypeMouvement.technique) {
-                        trouverObjetDansInventaire(inventaire, mouvement.objet).niveau ++ ;
-                    }
-
-                    // les parchemins sont à usage unique
-                    if(objet.type === TypeObjet.parchemin) {
-                        trouverObjetDansInventaire(inventaire, objet.id).status = StatusObjet.objet_ko;
-                    }
-
-                }
-            }
-
-            let initiative = caracteristique.vitesse - ennemi.vitesse;
-            if(initiative <= 0) initiative = 0;
-
-            if(enchantement_status === StatusMouvement.mouvement_ok && utilisations.incantation > trouverObjetDansInventaire(inventaire, "manuelMage")?.niveau-1) {
-                position.resultat.message = "Pour l'instant, vous ne pouvez utiliser que " + (utilisations.incantation-1) + " parchemin(s) dans votre enchantement";
-                position.success = false;
-            } else if( (enchantement_status === StatusMouvement.mouvement_ok || charme_status === StatusMouvement.mouvement_ok) && utilisations.bloquer + utilisations.frapper > 1 ) {
-                position.resultat.message = "Quand vous faites de la magie, vous ne pouvez utiliser qu'un seul mouvements de mélée";
-                position.success = false;
-            } else if(utilisations.bloquer + utilisations.frapper > 2) {
-                position.resultat.message = "Vous n'avez que 2 mains, vous ne pouvez utiliser que 2 mouvements de mélée";
-                position.success = false;
-            } else if(utilisations.technique > 1) {
-                position.resultat.message = "Vous ne pouvez utiliser qu'une seule technique";
-                position.success = false;
-            } else if(utilisations.jeter > 0 && initiative <= 0) {
-                position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez rien jeter";
-                position.success = false;
-            } else if(initiative < utilisations.jeter) {
-                position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+initiative+" mouvement jeter";
-                position.success = false;
-            }
-
-            // cas special de la baston du barabre :
-            else if(baston && utilisations.sort > 0) {
-                position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
-                position.success = false;
-            }
-
-            else if(ennemi.defense <= 0) {
-                position.resultat.message = "Vous carbonisez "+nomEnnemi;
-                position.success = true;
-            } else if(ennemi.attaque <= 0) {
-                position.resultat.message = "Vous congelez "+nomEnnemi;
-                position.success = true;
-            } else if(caracteristique.attaqueDistance > ennemi.defense) {
-                position.resultat.message = "Vous dégommez "+nomEnnemi;
-                position.success = true;
-            } else if(ennemi.attaque >= caracteristique.defense) {
-                position.resultat.message = nomEnnemi + " a une attaque trop forte";
-                position.success = false;
-            } else if(ennemi.defense >= caracteristique.attaque) {
-                position.resultat.message = nomEnnemi + " a une defense trop forte";
-                position.success = false;
-            } else {
-                position.resultat.message = "Vous écrasez "+nomEnnemi;
-                position.success = true;
-            }
+            position.resultat.message = "Vous écrasez "+nomEnnemi;
+            position.success = true;
         }
 
         // récupérer le trésor (seulement si on n'a pas de baston)
@@ -1399,6 +1436,13 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
                 fusionnerMouvement(effetMouvement, value)
             });
             break;
+    }
+
+    if(caracteristique.sournois) {
+        effetMouvement.attaque *= 2;
+        effetMouvement.defense *= 2;
+        effetMouvement.mana *= 2;
+        effetMouvement.vitesse *= 2;
     }
 
     return effetMouvement;
