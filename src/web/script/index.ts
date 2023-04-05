@@ -216,7 +216,7 @@ const OBJETS: Objet[] = [
         mouvements: ["epee_frapper"],
         details: "L'EPEE" +
             "<p>L'épée est l'arme classique pour le corps à corps.</p>" +
-            "<p>Elle apporte apporte une attaque de 1, majorée par la force du héro. Elle apporte une défense de 1, majorée par la resistance du héro. Chaque rune ajoute également 1 à l'attaque et à la défense."
+            "<p>Elle apporte une attaque de 1, majorée par la force du héro. Elle apporte une défense de 1, majorée par la résistance du héro. Chaque rune ajoute également 1 à l'attaque et à la défense."
     },
     {
         ... new _Objet("lance", TypeObjet.arme),
@@ -399,7 +399,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-3"),
         message: "Vous entrez une petite salle remplie de toiles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
-        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique"), trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'araignée",
             attaque: 6,
@@ -438,7 +438,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-6"),
         message: "Vous descendez à la cave. Une ghoule vous aperçoit, et avance vers vous... lentement...",
-        tresor: {objets:[], nbPotions: 0, nbRunes:2},
+        tresor: {objets:[trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:2},
         ennemi: {
             nom: "la ghoule",
             attaque: 10,
@@ -546,14 +546,20 @@ const MOUVEMENTS: Mouvement[] = [
 
 
 
+function documentHeight() {
+    const doc = document.documentElement
+    doc.style.setProperty('--doc-height', `${window.innerHeight}px`);
+    document.getElementById("body").style.fontSize = (window.innerHeight/100)+'px';
 
+}
+
+window.onresize = documentHeight;
 
 window.oncontextmenu = function() {
     return false;
 }
 window.onload = function() {
-
-    document.documentElement.requestFullscreen();
+    documentHeight();
 
     document.getElementById("presentation").addEventListener("touchstart", function(e) {
         document.getElementById("scene-presentator").classList.remove("flipped");
@@ -695,7 +701,7 @@ window.onload = function() {
     body.addEventListener('touchend', function(e) {
         if (!DRAG.element) return;
 
-        if(new Date().getTime() - DRAG.time < 500) {
+        if(new Date().getTime() - DRAG.time < 100) {
             // toucher court
             document.getElementById("overlay").classList.add("actif");
             afficherDetails(DRAG.element.getAttribute("tdd-objet"));
@@ -808,7 +814,7 @@ function dessinerPosition() {
     // ecrire le resultat
     const resultat = document.getElementById('resultat');
     const resultatMessage = document.getElementById('resultat-message');
-    resultatMessage.innerHTML = POSITION.resultat.message + "<div class='continue'>-></div>";
+    resultatMessage.innerHTML = POSITION.resultat.message + "<span class='continue'>-></span>";
     if(POSITION.success) {
         resultat.classList.remove("fail");
         resultat.classList.add("success");
@@ -841,7 +847,7 @@ function dessinerPosition() {
 
     // dessiner le combat
     const initiative = POSITION.resultat.caracteristiqueHero.initiative;
-    document.getElementById("jeter-marqueur-initiative").innerHTML = String(initiative);
+    document.getElementById("jeter-marqueur-initiative-text").innerHTML = String(initiative);
 
     const technique = document.getElementById('technique');
     const sort = document.getElementById('sort');
@@ -1334,7 +1340,7 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
             const marqueur = document.createElement('div');
             marqueur.classList.add("marqueur");
             marqueur.classList.add("marqueur-niveau");
-            marqueur.innerHTML = String(reference.niveau);
+            marqueur.innerHTML = "<span>"+String(reference.niveau)+"</span>";
             marqueurs.append(marqueur);
             objet.append(marqueurs);
         }
@@ -1493,7 +1499,7 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         if(mouvement.distance) {
             marqueur.classList.add("marqueur-attaque-distance");
         }
-        marqueur.innerHTML = String(mouvement.attaque);
+        marqueur.innerHTML = "<span>"+String(mouvement.attaque)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1501,7 +1507,7 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-defense");
-        marqueur.innerHTML = String(mouvement.defense);
+        marqueur.innerHTML = "<span>"+String(mouvement.defense)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1509,7 +1515,7 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-vitesse");
-        marqueur.innerHTML = String(mouvement.vitesse);
+        marqueur.innerHTML = "<span>"+String(mouvement.vitesse)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1517,7 +1523,7 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-mana");
-        marqueur.innerHTML = String(mouvement.mana);
+        marqueur.innerHTML = "<span>"+String(mouvement.mana)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1528,12 +1534,12 @@ function choisirPosition(id: string) {
     POSITION = trouverPosition(id);
     document.getElementById("scene-presentator").classList.add("flipped");
     document.getElementById("presentation").className = "face "+POSITION.presentation;
-    let message = POSITION.message;
+    let message = "<span>"+POSITION.message+"</span>";
     if(POSITION.ennemi.ethere) {
-        message += "<div class='presentation-alerte'>L'ennemi est éthéré<br>Les armes sans runes n'ont aucun effet sur lui</div>";
+        message += "<span class='presentation-alerte'>L'ennemi est éthéré<br>Les armes sans runes n'ont aucun effet sur lui</span>";
     }
-    message += "<div class='continue'>-></div>";
-    document.getElementById("presentation-message").innerHTML = message;
+    message += "<span class='continue'>-></span>";
+    document.getElementById("presentation-message"). innerHTML = message;
 
     document.getElementById("caracteristique-ennemi").className = "thumbnail "+POSITION.presentation;
 }
