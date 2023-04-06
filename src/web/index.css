@@ -144,7 +144,7 @@ body * {
     visibility: hidden;
 }
 
-#jeter-marqueur-initiative {
+#marqueur-distance {
     width: 1em;
     height: 1em;
     position: absolute;
@@ -155,6 +155,43 @@ body * {
     left: 80vw;
     background: darkseagreen;
 }
+
+#marqueur-melee {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    padding: 1em;
+    border-radius: 0.5em;
+    border: solid 1px black;
+    top: 66em;
+    left: 80vw;
+    background: indianred;
+}
+
+#marqueur-sort {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    padding: 1em;
+    border-radius: 0.5em;
+    border: solid 1px black;
+    top: 46em;
+    left: 80vw;
+    background: pink;
+}
+
+#marqueur-technique {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    padding: 1em;
+    border-radius: 0.5em;
+    border: solid 1px black;
+    top: 36em;
+    left: 80vw;
+    background: gold;
+}
+
 .actions-libelle {
     position: absolute;
     opacity: 0.3;
@@ -387,6 +424,13 @@ body * {
 }
 .evidence-hover::after {
     box-shadow: darkred 0px 0px 1em 1em;
+}
+
+.marqueur-error {
+    box-shadow: darkred 0px 0px 1em 1em;
+}
+.marqueur-success {
+    box-shadow: darkgreen 0px 0px 1em 1em;
 }
 
 @keyframes pulse {

@@ -15,8 +15,21 @@ interface Drag {
 interface ResultatCombat {
     message: string;
     hero: Hero;
-    caracteristiqueHero: Caracteristique,
-    caracteristiqueEnnemi: Caracteristique
+    caracteristiqueHero: Caracteristique;
+    caracteristiqueEnnemi: Caracteristique;
+
+    nbTechniqueAutorises: number;
+    nbSortAutorises: number;
+    nbDistanceAutorises: number;
+    nbMeleeAutorises: number;
+
+    nbTechnique: number;
+    nbSort: number;
+    nbDistance: number;
+    nbMelee: number;
+
+    attaqueDistanceSuccess: boolean;
+    attaqueTotalSuccess: boolean;
 }
 
 interface Position {
@@ -52,9 +65,8 @@ interface Preparation {
 
 interface Ennemi {
     nom: string;
-    attaque: number;
-    defense: number;
-    vitesse: number;
+    attaqueDistance: number;
+    attaqueTotale: number;
 
     ethere: boolean;
 }
@@ -92,13 +104,7 @@ enum TypeMouvement {
 
 interface Caracteristique {
     attaqueDistance: number,
-    attaque: number,
-    defense: number,
-    mana: number,
-    vitesse: number,
-    initiative: number,
-
-    sournois: boolean,
+    attaqueTotale: number,
 }
 
 interface Valeur {
@@ -106,17 +112,17 @@ interface Valeur {
     status: StatusMouvement;
 
     attaque: number;
-    defense: number;
-    mana: number;
-    vitesse: number;
-
     distance: boolean;
-    feu: boolean;
-    glace: boolean;
+
+    force: number;
+    courage: number;
+    agilite: number;
+    intelligence: number;
 }
 interface Mouvement extends Valeur {
     type: TypeMouvement;
     objet: string;
+    attributs: Attribut[];
 }
 
 interface Charme extends Valeur {
@@ -128,12 +134,18 @@ interface Inventaire {
     nbRunes: number;
     nbPotions: number;
 }
+enum Attribut {
+    force,
+    courage,
+    agilite,
+    intelligence
+}
 
 interface Hero {
     force: number;
-    endurance: number;
-    vitesse: number;
-    mana: number;
+    courage: number;
+    agilite: number;
+    intelligence: number;
 }
 
 class _Position implements Position {
@@ -146,9 +158,19 @@ class _Position implements Position {
     charmes: Charme[] = [];
     resultat: ResultatCombat = {
         message: "",
-        hero: {force: 1, endurance: 1, vitesse: 1, mana: 1},
-        caracteristiqueHero: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0, initiative: 0, sournois: false},
-        caracteristiqueEnnemi: {attaqueDistance: 0, attaque: 0, defense: 0, mana: 0, vitesse: 0, initiative: 0, sournois: false}
+        hero: {force: 1, courage: 1, agilite: 1, intelligence: 1},
+        caracteristiqueHero: {attaqueTotale: 0, attaqueDistance: 0},
+        caracteristiqueEnnemi: {attaqueTotale: 0, attaqueDistance: 0},
+        nbDistanceAutorises: 0,
+        nbMeleeAutorises: 0,
+        nbSortAutorises: 0,
+        nbTechniqueAutorises: 0,
+        nbDistance: 0,
+        nbMelee: 0,
+        nbSort: 0,
+        nbTechnique: 0,
+        attaqueDistanceSuccess: false,
+        attaqueTotalSuccess: false
     };
     success: boolean = false;
     tresor: Inventaire;
@@ -164,16 +186,18 @@ class _Position implements Position {
 
 class _Mouvement implements Mouvement {
     attaque: number = 0;
-    defense: number = 0;
     distance: boolean = false;
-    feu: boolean = false;
-    glace: boolean = false;
     id: string;
-    mana: number = 0;
     objet: string;
     type: TypeMouvement;
-    vitesse: number = 0;
     status: StatusMouvement = StatusMouvement.mouvement_ok;
+
+    attributs: Attribut[] = [];
+
+    agilite: number = 0;
+    courage: number = 0;
+    force: number = 0;
+    intelligence: number = 0;
 
     constructor(id: string, type: TypeMouvement, objet: string) {
         this.id = id;
@@ -376,9 +400,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("lance"), trouverObjet("bouclier")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le squelette",
-            attaque: 1,
-            defense: 1,
-            vitesse: 1,
+            attaqueTotale: 1,
+            attaqueDistance: 1,
             ethere: false
         },
         presentation: "skeleton",
@@ -389,9 +412,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("manuelAventurier"), trouverObjet("parcheminRapidite")], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le zombie",
-            attaque: 4,
-            defense: 4,
-            vitesse: 0,
+            attaqueTotale: 4,
+            attaqueDistance: 4,
             ethere: false
         },
         presentation: "zombie",
@@ -402,9 +424,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'araignée",
-            attaque: 6,
-            defense: 4,
-            vitesse: 2,
+            attaqueTotale: 6,
+            attaqueDistance: 6,
             ethere: false
         },
         presentation: "spider",
@@ -415,9 +436,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("parcheminProtection"), trouverObjet("javelot")], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "le fantôme",
-            attaque: 5,
-            defense: 5,
-            vitesse: 1,
+            attaqueTotale: 5,
+            attaqueDistance: 5,
             ethere: true
         },
         presentation: "ghost",
@@ -428,9 +448,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("manuelMage")], nbPotions: 2, nbRunes:0},
         ennemi: {
             nom: "la sorcière",
-            attaque: 10,
-            defense: 5,
-            vitesse: 3,
+            attaqueTotale: 10,
+            attaqueDistance: 10,
             ethere: false
         },
         presentation: "hag",
@@ -441,9 +460,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:2},
         ennemi: {
             nom: "la ghoule",
-            attaque: 10,
-            defense: 20,
-            vitesse: 0,
+            attaqueTotale: 10,
+            attaqueDistance: 10,
             ethere: false
         },
         presentation: "ghoul",
@@ -454,9 +472,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "l'épouvantail",
-            attaque: 12,
-            defense: 10,
-            vitesse: 5,
+            attaqueTotale: 12,
+            attaqueDistance: 12,
             ethere: false
         },
         presentation: "scarecrow",
@@ -467,9 +484,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[trouverObjet("manuelVoleur")], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le loup-garou",
-            attaque: 15,
-            defense: 15,
-            vitesse: 10,
+            attaqueTotale: 15,
+            attaqueDistance: 15,
             ethere: false
         },
         presentation: "werewolf",
@@ -480,9 +496,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[], nbPotions: 1, nbRunes:1},
         ennemi: {
             nom: "la banshee",
-            attaque: 30,
-            defense: 10,
-            vitesse: 10,
+            attaqueTotale: 30,
+            attaqueDistance: 30,
             ethere: true
         },
         presentation: "banshee",
@@ -493,9 +508,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[], nbPotions: 0, nbRunes:0},
         ennemi: {
             nom: "le vampire",
-            attaque: 30,
-            defense: 30,
-            vitesse: 10,
+            attaqueTotale: 30,
+            attaqueDistance: 30,
             ethere: false
         },
         presentation: "vampire",
@@ -507,14 +521,14 @@ const POSITIONS: Position[] = [
 let POSITION: Position = POSITIONS[0];
 
 const MOUVEMENTS: Mouvement[] = [
-    {... new _Mouvement("manuelAventurier_positionAggressive", TypeMouvement.technique, "manuelAventurier"), attaque: 1},
-    {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), defense: 1},
-    {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), vitesse: 1},
-    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), mana: 1},
-    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attaque: 3, defense: 3, vitesse: 3},
+    {... new _Mouvement("manuelAventurier_positionAggressive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.force]},
+    {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.courage]},
+    {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.agilite]},
+    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.intelligence]},
+    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attributs: [Attribut.force, Attribut.courage, Attribut.agilite]},
     {... new _Mouvement("manuelVoleur_attaqueSournoise", TypeMouvement.technique, "manuelVoleur")},
 
-    {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique")},
+    {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique"), attributs: [Attribut.intelligence, Attribut.force]},
     {... new _Mouvement("parcheminProjectileMagique_incantation", TypeMouvement.incantation, "parcheminProjectileMagique")},
     {... new _Mouvement("parcheminProtection_sort", TypeMouvement.sort, "parcheminProtection")},
     {... new _Mouvement("parcheminProtection_incantation", TypeMouvement.incantation, "parcheminProtection")},
@@ -525,22 +539,22 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("parcheminRapidite_sort", TypeMouvement.sort, "parcheminRapidite")},
     {... new _Mouvement("parcheminRapidite_incantation", TypeMouvement.incantation, "parcheminRapidite")},
 
-    {... new _Mouvement("manuelMage_charme", TypeMouvement.technique, "manuelMage")},
+    {... new _Mouvement("manuelMage_charme", TypeMouvement.technique, "manuelMage"), distance: true},
     {... new _Mouvement("manuelMage_enchantement", TypeMouvement.technique, "manuelMage")},
 
-    {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attaque: 1, defense: 1},
-    {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attaque: 2},
-    {... new _Mouvement("lance_jeter", TypeMouvement.jeter, "lance"), attaque: 2},
-    {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), defense: 3},
-    {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attaque: 1},
-    {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attaque: 1},
-    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace"), attaque: 1, glace: true},
-    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.frapper, "hacheDeGlace"), glace: true},
-    {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace"), defense: 2, glace: true},
-    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attaque: 1, feu: true},
-    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.frapper, "hacheDeFeu"), feu: true},
-    {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu"), defense: 2, feu: true},
-    {... new _Mouvement("javelot_jeter", TypeMouvement.jeter, "javelot"), attaque: 3},
+    {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attributs: [Attribut.force, Attribut.courage]},
+    {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attributs: [Attribut.force, Attribut.agilite]},
+    {... new _Mouvement("lance_jeter", TypeMouvement.jeter, "lance"), attributs: [Attribut.force, Attribut.agilite]},
+    {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), attributs: [Attribut.courage]},
+    {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attributs: [Attribut.agilite]},
+    {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attributs: [Attribut.agilite]},
+    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace")},
+    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.frapper, "hacheDeGlace")},
+    {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace")},
+    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu")},
+    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.frapper, "hacheDeFeu")},
+    {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu")},
+    {... new _Mouvement("javelot_jeter", TypeMouvement.jeter, "javelot"), attributs: [Attribut.force, Attribut.force, Attribut.agilite]},
 
 ]
 
@@ -799,17 +813,17 @@ function dessinerPosition() {
 
     // écrire les attributs
     document.getElementById("attribut-force").innerHTML = String(POSITION.resultat.hero.force);
-    document.getElementById("attribut-endurance").innerHTML = String(POSITION.resultat.hero.endurance);
-    document.getElementById("attribut-vitesse").innerHTML = String(POSITION.resultat.hero.vitesse);
-    document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.mana);
+    document.getElementById("attribut-endurance").innerHTML = String(POSITION.resultat.hero.courage);
+    document.getElementById("attribut-vitesse").innerHTML = String(POSITION.resultat.hero.agilite);
+    document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.intelligence);
 
     // écrire les totaux
     document.getElementById("total-attaque-distance-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaqueDistance);
-    document.getElementById("total-attaque-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaque);
-    document.getElementById("total-defense-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.defense);
+    document.getElementById("total-attaque-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaqueTotale);
+    //document.getElementById("total-defense-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.defense);
 
-    document.getElementById("total-defense-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.defense);
-    document.getElementById("total-attaque-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.attaque);
+    document.getElementById("total-defense-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.attaqueDistance);
+    document.getElementById("total-attaque-ennemi").innerHTML = String(POSITION.resultat.caracteristiqueEnnemi.attaqueTotale);
 
     // ecrire le resultat
     const resultat = document.getElementById('resultat');
@@ -846,8 +860,43 @@ function dessinerPosition() {
 
 
     // dessiner le combat
-    const initiative = POSITION.resultat.caracteristiqueHero.initiative;
-    document.getElementById("jeter-marqueur-initiative-text").innerHTML = String(initiative);
+    // const initiative = POSITION.resultat.caracteristiqueHero.initiative;
+    // document.getElementById("jeter-marqueur-initiative-text").innerHTML = String(initiative);
+    document.getElementById("marqueur-distance-text").innerHTML = String(POSITION.resultat.nbDistanceAutorises);
+    if(POSITION.resultat.nbDistance > POSITION.resultat.nbDistanceAutorises) {
+        document.getElementById("marqueur-distance").classList.add("marqueur-error");
+    } else {
+        document.getElementById("marqueur-distance").classList.remove("marqueur-error");
+    }
+    document.getElementById("marqueur-melee-text").innerHTML = String(POSITION.resultat.nbMeleeAutorises);
+    if(POSITION.resultat.nbMelee > POSITION.resultat.nbMeleeAutorises) {
+        document.getElementById("marqueur-melee").classList.add("marqueur-error");
+    } else {
+        document.getElementById("marqueur-melee").classList.remove("marqueur-error");
+    }
+    document.getElementById("marqueur-sort-text").innerHTML = String(POSITION.resultat.nbSortAutorises);
+    if(POSITION.resultat.nbSort > POSITION.resultat.nbSortAutorises) {
+        document.getElementById("marqueur-sort").classList.add("marqueur-error");
+    } else {
+        document.getElementById("marqueur-sort").classList.remove("marqueur-error");
+    }
+    document.getElementById("marqueur-technique-text").innerHTML = String(POSITION.resultat.nbTechniqueAutorises);
+    if(POSITION.resultat.nbTechnique > POSITION.resultat.nbTechniqueAutorises) {
+        document.getElementById("marqueur-technique").classList.add("marqueur-error");
+    } else {
+        document.getElementById("marqueur-technique").classList.remove("marqueur-error");
+    }
+
+    if(POSITION.resultat.attaqueTotalSuccess) {
+        document.querySelector("#caracteristique-hero .marqueur-attaque:not(.marqueur-attaque-distance)").classList.add("marqueur-success");
+    } else {
+        document.querySelector("#caracteristique-hero .marqueur-attaque:not(.marqueur-attaque-distance)").classList.remove("marqueur-success");
+    }
+    if(POSITION.resultat.attaqueDistanceSuccess) {
+        document.querySelector("#caracteristique-hero .marqueur-attaque-distance").classList.add("marqueur-success");
+    } else {
+        document.querySelector("#caracteristique-hero .marqueur-attaque-distance ").classList.remove("marqueur-success");
+    }
 
     const technique = document.getElementById('technique');
     const sort = document.getElementById('sort');
@@ -892,9 +941,9 @@ function recalculerAventure() {
 
     const hero: Hero = {
         force: 1,
-        endurance: 1,
-        vitesse: 1,
-        mana: 1
+        courage: 1,
+        agilite: 1,
+        intelligence: 1
     };
 
     const charmes: Charme[] = [];
@@ -964,27 +1013,31 @@ function recalculerAventure() {
 
         const caracteristique: Caracteristique = {
             attaqueDistance: 0,
-            attaque: 0,
-            defense: 0,
-            mana: hero.mana,
-            vitesse: hero.vitesse,
-            initiative: 0,
-            sournois: false,
+            attaqueTotale: 0,
         }
 
         const ennemi: Caracteristique = {
-            attaqueDistance: 0,
-            attaque: position.ennemi.attaque,
-            defense: position.ennemi.defense,
-            mana: 0,
-            vitesse: position.ennemi.vitesse,
-            initiative: 0,
-            sournois: false,
+            attaqueTotale: position.ennemi.attaqueTotale,
+            attaqueDistance: position.ennemi.attaqueDistance,
         };
         const nomEnnemi = position.ennemi.nom;
 
-        position.resultat.caracteristiqueHero = caracteristique;
-        position.resultat.caracteristiqueEnnemi = ennemi;
+        position.resultat = {
+            attaqueDistanceSuccess: false,
+            attaqueTotalSuccess: false,
+            caracteristiqueEnnemi: ennemi,
+            caracteristiqueHero: caracteristique,
+            hero: {... hero},
+            message: "",
+            nbDistanceAutorises: 1,
+            nbTechniqueAutorises: 1,
+            nbSortAutorises: 0,
+            nbMeleeAutorises: 2,
+            nbDistance: 0,
+            nbTechnique: 0,
+            nbSort: 0,
+            nbMelee: 0
+        };
 
         const utilisations = {
             technique: 0,
@@ -997,11 +1050,8 @@ function recalculerAventure() {
 
         position.mouvements = [];
 
-        position.resultat.hero = {... hero};
-
         const baston = position.combat.filter(value => value === "manuelBarbare_baston").length > 0;
         const attaqueSournoise = position.combat.filter(value => value === "manuelVoleur_attaqueSournoise").length > 0;
-        caracteristique.sournois = attaqueSournoise;
 
         // traiter les charmes
         position.charmes = [];
@@ -1010,17 +1060,9 @@ function recalculerAventure() {
                 position.charmes.push({...charme});
                 charme.duree--;
 
-                caracteristique.attaque += charme.attaque;
-                caracteristique.attaqueDistance += charme.attaque;
-                caracteristique.defense += charme.defense;
-                caracteristique.mana += charme.mana;
-                caracteristique.vitesse += charme.vitesse;
-
-                if(charme.feu) {
-                    ennemi.defense -= (charme.attaque + charme.defense);
-                }
-                if(charme.glace) {
-                    ennemi.attaque -= (charme.attaque + charme.defense);
+                caracteristique.attaqueTotale += charme.attaque;
+                if(charme.distance) {
+                    caracteristique.attaqueDistance += charme.attaque;
                 }
             }
         }
@@ -1064,14 +1106,13 @@ function recalculerAventure() {
                     const charme: Charme = {
                         id: 'charme',
                         attaque: effetMouvement.attaque,
-                        defense: effetMouvement.defense,
-                        vitesse: effetMouvement.vitesse,
-                        mana: effetMouvement.mana,
-                        feu: effetMouvement.feu,
-                        glace: effetMouvement.glace,
                         distance: true,
                         duree: objet.niveau,
                         status: StatusMouvement.mouvement_ok,
+                        force: effetMouvement.force,
+                        courage: effetMouvement.courage,
+                        agilite: effetMouvement.agilite,
+                        intelligence: effetMouvement.intelligence
                     }
                     charmes.push(charme);
                 }
@@ -1083,27 +1124,18 @@ function recalculerAventure() {
                 if(mouvement.id === "manuelMage_enchantement") {
                     enchantement = {...effetMouvement};
                     effetMouvement.attaque = 0;
-                    effetMouvement.defense = 0;
-                    effetMouvement.mana = 0;
-                    effetMouvement.vitesse = 0;
+                    effetMouvement.force = 0;
+                    effetMouvement.courage = 0;
+                    effetMouvement.agilite = 0;
+                    effetMouvement.intelligence = 0;
                 }
                 if(enchantement && (effetMouvement.type === TypeMouvement.bloquer || effetMouvement.type === TypeMouvement.frapper)) {
                     fusionnerMouvement(effetMouvement, enchantement);
                 }
 
+                caracteristique.attaqueTotale += effetMouvement.attaque;
                 if(effetMouvement.distance) {
                     caracteristique.attaqueDistance += effetMouvement.attaque;
-                }
-                caracteristique.attaque += effetMouvement.attaque;
-                caracteristique.defense += effetMouvement.defense;
-                caracteristique.vitesse += effetMouvement.vitesse;
-                caracteristique.mana += effetMouvement.mana;
-
-                if(effetMouvement.feu) {
-                    ennemi.defense -= (effetMouvement.attaque + effetMouvement.defense);
-                }
-                if(effetMouvement.glace) {
-                    ennemi.attaque -= (effetMouvement.attaque + effetMouvement.defense);
                 }
 
                 // on compte le nombre d'utilisation de chaque type
@@ -1122,76 +1154,44 @@ function recalculerAventure() {
             }
         }
 
-        caracteristique.initiative = caracteristique.vitesse - ennemi.vitesse;
+        position.resultat.nbMelee = utilisations.frapper + utilisations.bloquer;
+        position.resultat.nbDistance = utilisations.jeter;
+        position.resultat.nbSort = utilisations.sort;
+        position.resultat.nbTechnique = utilisations.technique;
 
-        if(attaqueSournoise) {
-            caracteristique.initiative = 1;
-        }
-
-        const niveauVoleur = trouverObjetDansInventaire(inventaire, "manuelVoleur")?.niveau-1;
-        const niveauMage = trouverObjetDansInventaire(inventaire, "manuelMage")?.niveau-1;
-
-        if(position.combat.length === 0 && caracteristique.attaque === 0) {
-            position.resultat.message = "Vous devez combattre "+nomEnnemi;
+        position.success = true;
+        if(position.resultat.nbMelee > position.resultat.nbMeleeAutorises) {
+            position.resultat.message = "Vous ne pouvez pas utiliser autant d'actions de mêlée";
             position.success = false;
         }
-        else if(attaqueSournoise && utilisations.bloquer > 0) {
-            position.resultat.message = "En cas d'attaque sournoise, vous ne pouvez pas utiliser de bouclier";
+        if(position.resultat.nbDistance > position.resultat.nbDistanceAutorises) {
+            position.resultat.message = "Vous ne pouvez pas utiliser autant d'actions à distance";
             position.success = false;
         }
-        else if(attaqueSournoise && utilisations.sort > 0) {
-            position.resultat.message = "En cas d'attaque sournoise, vous ne pouvez pas utiliser de parchemin";
+        if(position.resultat.nbSort > position.resultat.nbSortAutorises) {
+            position.resultat.message = "Vous ne pouvez pas utiliser autant d'actions de sorts";
             position.success = false;
         }
-        else if(attaqueSournoise && (utilisations.jeter + utilisations.frapper) > niveauVoleur) {
-            position.resultat.message = "Pour l'instant, vous ne pouvez utiliser que " + niveauVoleur + " arme(s) pour votre attaque sournoise";
-            position.success = false;
-        }
-        else if(enchantement_status === StatusMouvement.mouvement_ok && utilisations.incantation > niveauMage) {
-            position.resultat.message = "Pour l'instant, vous ne pouvez utiliser que " + niveauMage + " parchemin(s) dans votre enchantement";
-            position.success = false;
-        } else if( (enchantement_status === StatusMouvement.mouvement_ok || charme_status === StatusMouvement.mouvement_ok) && utilisations.bloquer + utilisations.frapper > 1 ) {
-            position.resultat.message = "Quand vous faites de la magie, vous ne pouvez utiliser qu'un seul mouvements de mélée";
-            position.success = false;
-        } else if(utilisations.bloquer + utilisations.frapper > 2) {
-            position.resultat.message = "Vous n'avez que 2 mains, vous ne pouvez utiliser que 2 mouvements de mélée";
-            position.success = false;
-        } else if(utilisations.technique > 1) {
-            position.resultat.message = "Vous ne pouvez utiliser qu'une seule technique";
-            position.success = false;
-        } else if(utilisations.jeter > 0 && caracteristique.initiative <= 0) {
-            position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez rien jeter";
-            position.success = false;
-        } else if(utilisations.jeter > 0 && caracteristique.initiative < utilisations.jeter) {
-            position.resultat.message = "Vous n'êtes pas assez rapide, vous ne pouvez  choisir que "+caracteristique.initiative+" mouvement jeter";
+        if(position.resultat.nbTechnique > position.resultat.nbTechniqueAutorises) {
+            position.resultat.message = "Vous ne pouvez pas utiliser autant d'actions de techniques";
             position.success = false;
         }
 
-        // cas special de la baston du barabre :
-        else if(baston && utilisations.sort > 0) {
-            position.resultat.message = "Le manuel du barbare ne permet pas de jeter des arme, ou de lancer des sorts";
-            position.success = false;
+        if(position.success) {
+            if (caracteristique.attaqueDistance > ennemi.attaqueDistance) {
+                position.resultat.message = "Vous dégommez " + nomEnnemi;
+                position.success = true;
+                position.resultat.attaqueDistanceSuccess = true;
+            } else if (caracteristique.attaqueTotale > ennemi.attaqueTotale) {
+                position.resultat.message = "Vous écrasez " + nomEnnemi;
+                position.success = true;
+                position.resultat.attaqueTotalSuccess = true;
+            } else {
+                position.resultat.message = "Vous ne faites pas le poids devant " + nomEnnemi;
+                position.success = false;
+            }
         }
 
-        else if(ennemi.defense <= 0) {
-            position.resultat.message = "Vous carbonisez "+nomEnnemi;
-            position.success = true;
-        } else if(ennemi.attaque <= 0) {
-            position.resultat.message = "Vous congelez "+nomEnnemi;
-            position.success = true;
-        } else if(caracteristique.attaqueDistance > ennemi.defense) {
-            position.resultat.message = "Vous dégommez "+nomEnnemi;
-            position.success = true;
-        } else if(ennemi.attaque >= caracteristique.defense) {
-            position.resultat.message = nomEnnemi + " a une attaque trop forte";
-            position.success = false;
-        } else if(ennemi.defense >= caracteristique.attaque) {
-            position.resultat.message = nomEnnemi + " a une defense trop forte";
-            position.success = false;
-        } else {
-            position.resultat.message = "Vous écrasez "+nomEnnemi;
-            position.success = true;
-        }
 
         // récupérer le trésor (seulement si on n'a pas de baston)
         // si on est bastpn, on ne récupère même pas ce qu'on a lancé
@@ -1399,20 +1399,11 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
 
     const effetMouvement: Mouvement = {...mouvement};
 
-
-    effetMouvement.attaque = mouvement.attaque * niveau;
-    effetMouvement.defense = mouvement.defense * niveau;
-    effetMouvement.vitesse = mouvement.vitesse * niveau;
-    effetMouvement.mana = mouvement.mana * niveau;
-
-    if(mouvement.type === TypeMouvement.jeter || mouvement.type === TypeMouvement.frapper) {
-        effetMouvement.attaque += hero.force;
-    }
-    if(mouvement.type === TypeMouvement.bloquer || mouvement.type === TypeMouvement.frapper) {
-        effetMouvement.defense += hero.endurance;
+    for(let attribut of mouvement.attributs) {
+        effetMouvement[Attribut[attribut]] += hero[Attribut[attribut]] * niveau;
     }
 
-
+/*
     // effets speciaux
     switch (mouvement.id) {
         case "parcheminProjectileMagique_sort":
@@ -1444,13 +1435,17 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
                 fusionnerMouvement(effetMouvement, value)
             });
             break;
-    }
-
+    }*/
+/*
     if(caracteristique.sournois) {
         effetMouvement.attaque *= 2;
         effetMouvement.defense *= 2;
         effetMouvement.mana *= 2;
         effetMouvement.vitesse *= 2;
+    }*/
+
+    for(let attribut of mouvement.attributs) {
+        effetMouvement.attaque += effetMouvement[Attribut[attribut]];
     }
 
     return effetMouvement;
@@ -1478,7 +1473,7 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
     if(mouvement.status === StatusMouvement.mouvement_ko) {
         return marqueurs;
     }
-
+/*
     if(mouvement.glace) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
@@ -1491,39 +1486,36 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         marqueur.classList.add("marqueur-feu");
         marqueurs.append(marqueur);
     }
-
-    if(mouvement.attaque > 0) {
+*/
+    if(mouvement.force > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-attaque");
-        if(mouvement.distance) {
-            marqueur.classList.add("marqueur-attaque-distance");
-        }
-        marqueur.innerHTML = "<span>"+String(mouvement.attaque)+"</span>";
+        marqueur.innerHTML = "<span>"+String(mouvement.force)+"</span>";
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.defense > 0) {
+    if(mouvement.courage > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-defense");
-        marqueur.innerHTML = "<span>"+String(mouvement.defense)+"</span>";
+        marqueur.innerHTML = "<span>"+String(mouvement.courage)+"</span>";
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.vitesse > 0) {
+    if(mouvement.agilite > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-vitesse");
-        marqueur.innerHTML = "<span>"+String(mouvement.vitesse)+"</span>";
+        marqueur.innerHTML = "<span>"+String(mouvement.agilite)+"</span>";
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.mana > 0) {
+    if(mouvement.intelligence > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-mana");
-        marqueur.innerHTML = "<span>"+String(mouvement.mana)+"</span>";
+        marqueur.innerHTML = "<span>"+String(mouvement.intelligence)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1567,10 +1559,8 @@ function afficherDetails(cible: string) {
 }
 
 function fusionnerMouvement(cible: Mouvement, ajout: Mouvement) {
-    cible.attaque += ajout.attaque;
-    cible.defense += ajout.defense;
-    cible.mana += ajout.mana;
-    cible.vitesse += ajout.vitesse;
-    cible.feu  = cible.feu || ajout.feu;
-    cible.glace  = cible.glace || ajout.glace;
+    cible.force += ajout.force;
+    cible.courage += ajout.courage;
+    cible.agilite += ajout.agilite;
+    cible.intelligence += ajout.intelligence;
 }
