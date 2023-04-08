@@ -153,7 +153,7 @@ body * {
     border: solid 1px black;
     top: 56em;
     left: 80vw;
-    background: darkseagreen;
+    background: wheat;
 }
 
 #marqueur-melee {
@@ -165,7 +165,7 @@ body * {
     border: solid 1px black;
     top: 66em;
     left: 80vw;
-    background: indianred;
+    background: wheat;
 }
 
 #marqueur-sort {
@@ -177,7 +177,7 @@ body * {
     border: solid 1px black;
     top: 46em;
     left: 80vw;
-    background: pink;
+    background: wheat;
 }
 
 #marqueur-technique {
@@ -189,7 +189,7 @@ body * {
     border: solid 1px black;
     top: 36em;
     left: 80vw;
-    background: gold;
+    background: wheat;
 }
 
 .actions-libelle {
@@ -234,19 +234,16 @@ body * {
 }
 
 .actions#technique {
-    background: gold;
+    background: wheat;
 }
 .actions#sort {
-    background: pink;
+    background: wheat;
 }
 .actions#jeter {
-    background: darkseagreen;
+    background: wheat;
 }
 .actions#frapper {
-    background: indianred;
-}
-.actions#bloquer {
-    background: cornflowerblue;
+    background: wheat;
 }
 
 .action {
@@ -548,14 +545,26 @@ body * {
     right: 1vw;
 }
 
+.attribut[tdd-attribut="force"] {
+    background: indianred;
+}
 .force {
     background-image: url("img/force.png");
+}
+.attribut[tdd-attribut="endurance"] {
+    background: cornflowerblue;
 }
 .endurance {
     background-image: url("img/armure.png");
 }
+.attribut[tdd-attribut="vitesse"] {
+    background: darkseagreen;
+}
 .vitesse {
     background-image: url("img/vitesse.png");
+}
+.attribut[tdd-attribut="mana"] {
+    background: pink;
 }
 .mana {
     background-image: url("img/mana.png");
@@ -574,6 +583,10 @@ body * {
 
 .bouclier {
     background-image: url("img/bouclier.jpeg");
+    background-size: cover;
+}
+.livre {
+    background-image: url("img/livre0.png");
     background-size: cover;
 }
 .manuelAventurier {
@@ -680,14 +693,17 @@ body * {
 #caracteristique-hero .marqueur-attaque.marqueur-attaque-distance {
     left: 5em;
     top: -1em;
+    background: gold;
 }
 #caracteristique-hero .marqueur-attaque {
-    left: -1em;
-    top: -1em;
+    left: 5em;
+    top: 5em;
+    background: gold;
 }
 #caracteristique-hero .marqueur-defense {
     left: -1em;
     top: 5em;
+    display: none;
 }
 #caracteristique-ennemi {
     position: relative;
@@ -702,10 +718,12 @@ body * {
 #caracteristique-ennemi .marqueur-attaque {
     left: -1em;
     top: 5em;
+    background: gold;
 }
 #caracteristique-ennemi .marqueur-defense {
     left: -1em;
     top: -1em;
+    background: gold;
 }
 
 .marqueur.marqueur-feu {

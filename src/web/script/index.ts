@@ -54,7 +54,8 @@ enum StatusPreparation {
 }
 enum TypePreparation {
     potion = "potion",
-    rune = "rune"
+    rune = "rune",
+    livre = "livre"
 }
 interface Preparation {
     id: string;
@@ -68,7 +69,7 @@ interface Ennemi {
     attaqueDistance: number;
     attaqueTotale: number;
 
-    ethere: boolean;
+    specials: EnnemiSpecial[];
 }
 
 enum StatusObjet {
@@ -117,7 +118,7 @@ interface Valeur {
     force: number;
     courage: number;
     agilite: number;
-    intelligence: number;
+    magie: number;
 }
 interface Mouvement extends Valeur {
     type: TypeMouvement;
@@ -133,19 +134,31 @@ interface Inventaire {
     objets: Objet[];
     nbRunes: number;
     nbPotions: number;
+    nbLivres: number;
 }
 enum Attribut {
     force,
     courage,
     agilite,
-    intelligence
+    magie
+}
+
+enum EnnemiSpecial {
+    poison,
+    entrave,
+    terreur,
+    antisort,
+    lent,
+    rapide,
+    ethere
+
 }
 
 interface Hero {
     force: number;
     courage: number;
     agilite: number;
-    intelligence: number;
+    magie: number;
 }
 
 class _Position implements Position {
@@ -158,7 +171,7 @@ class _Position implements Position {
     charmes: Charme[] = [];
     resultat: ResultatCombat = {
         message: "",
-        hero: {force: 1, courage: 1, agilite: 1, intelligence: 1},
+        hero: {force: 1, courage: 1, agilite: 1, magie: 1},
         caracteristiqueHero: {attaqueTotale: 0, attaqueDistance: 0},
         caracteristiqueEnnemi: {attaqueTotale: 0, attaqueDistance: 0},
         nbDistanceAutorises: 0,
@@ -197,7 +210,7 @@ class _Mouvement implements Mouvement {
     agilite: number = 0;
     courage: number = 0;
     force: number = 0;
-    intelligence: number = 0;
+    magie: number = 0;
 
     constructor(id: string, type: TypeMouvement, objet: string) {
         this.id = id;
@@ -397,120 +410,120 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-1"),
         message: "vous arrivez devant le manoir, armé de votre seule épée. Un squelette garde le portail.",
-        tresor: {objets:[trouverObjet("lance"), trouverObjet("bouclier")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("lance"), trouverObjet("bouclier")], nbPotions: 1, nbRunes:1, nbLivres: 1},
         ennemi: {
             nom: "le squelette",
             attaqueTotale: 1,
-            attaqueDistance: 1,
-            ethere: false
+            attaqueDistance: 0,
+            specials: []
         },
         presentation: "skeleton",
     },
     {
         ... new _Position("position-2"),
-        message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
-        tresor: {objets:[trouverObjet("manuelAventurier"), trouverObjet("parcheminRapidite")], nbPotions: 1, nbRunes:1},
-        ennemi: {
-            nom: "le zombie",
-            attaqueTotale: 4,
-            attaqueDistance: 4,
-            ethere: false
-        },
-        presentation: "zombie",
-    },
-    {
-        ... new _Position("position-3"),
         message: "Vous entrez une petite salle remplie de toiles d'araignées. Une araignée géante vénimeuse vous tombe soudain dessus.",
-        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("dagueRunique"), trouverObjet("parcheminProjectileMagique")], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "l'araignée",
             attaqueTotale: 6,
-            attaqueDistance: 6,
-            ethere: false
+            attaqueDistance: 4,
+            specials: [EnnemiSpecial.poison, EnnemiSpecial.rapide]
         },
         presentation: "spider",
     },
     {
+        ... new _Position("position-3"),
+        message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
+        tresor: {objets:[trouverObjet("manuelAventurier"), trouverObjet("parcheminRapidite")], nbPotions: 0, nbRunes:0, nbLivres: 0},
+        ennemi: {
+            nom: "le zombie",
+            attaqueTotale: 4,
+            attaqueDistance: 4,
+            specials: [EnnemiSpecial.lent]
+        },
+        presentation: "zombie",
+    },
+    {
         ... new _Position("position-4"),
         message: "Vous avancez dans un long couloir. Un fantôme vous barre la route.",
-        tresor: {objets:[trouverObjet("parcheminProtection"), trouverObjet("javelot")], nbPotions: 1, nbRunes:1},
+        tresor: {objets:[trouverObjet("parcheminProtection"), trouverObjet("javelot")], nbPotions: 1, nbRunes:1, nbLivres: 0},
         ennemi: {
             nom: "le fantôme",
             attaqueTotale: 5,
             attaqueDistance: 5,
-            ethere: true
+            specials: [EnnemiSpecial.ethere]
         },
         presentation: "ghost",
     },
     {
         ... new _Position("position-5"),
         message: "Vous entrez dans la cuisine. Une vieille sorcière s'occupe d'un chaudron fumant",
-        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("manuelMage")], nbPotions: 2, nbRunes:0},
+        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("manuelMage")], nbPotions: 2, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "la sorcière",
             attaqueTotale: 10,
             attaqueDistance: 10,
-            ethere: false
+            specials: [EnnemiSpecial.antisort]
         },
         presentation: "hag",
     },
     {
         ... new _Position("position-6"),
         message: "Vous descendez à la cave. Une ghoule vous aperçoit, et avance vers vous... lentement...",
-        tresor: {objets:[trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:2},
+        tresor: {objets:[trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:2, nbLivres: 0},
         ennemi: {
             nom: "la ghoule",
             attaqueTotale: 10,
             attaqueDistance: 10,
-            ethere: false
+            specials: [EnnemiSpecial.lent, EnnemiSpecial.poison]
         },
         presentation: "ghoul",
     },
     {
         ... new _Position("position-7"),
         message: "Vous sortez dans la court, où un épouvantail terrifiant est posé.",
-        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "l'épouvantail",
             attaqueTotale: 12,
             attaqueDistance: 12,
-            ethere: false
+            specials: [EnnemiSpecial.terreur]
         },
         presentation: "scarecrow",
     },
     {
         ... new _Position("position-8"),
         message: "Vous croisez un bonhomme poilu, qui se transforme d'un coup en loup-garoup !",
-        tresor: {objets:[trouverObjet("manuelVoleur")], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[trouverObjet("manuelVoleur")], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "le loup-garou",
             attaqueTotale: 15,
             attaqueDistance: 15,
-            ethere: false
+            specials: [EnnemiSpecial.rapide, EnnemiSpecial.terreur]
         },
         presentation: "werewolf",
     },
     {
         ... new _Position("position-9"),
         message: "Devant vous, se tient la banshee",
-        tresor: {objets:[], nbPotions: 1, nbRunes:1},
+        tresor: {objets:[], nbPotions: 1, nbRunes:1, nbLivres: 0},
         ennemi: {
             nom: "la banshee",
             attaqueTotale: 30,
             attaqueDistance: 30,
-            ethere: true
+            specials: [EnnemiSpecial.ethere]
         },
         presentation: "banshee",
     },
     {
         ... new _Position("position-10"),
         message: "Vous arrivez enfin devant le boss final : un vampire",
-        tresor: {objets:[], nbPotions: 0, nbRunes:0},
+        tresor: {objets:[], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "le vampire",
             attaqueTotale: 30,
             attaqueDistance: 30,
-            ethere: false
+            specials: []
         },
         presentation: "vampire",
     }
@@ -524,11 +537,11 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("manuelAventurier_positionAggressive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.force]},
     {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.courage]},
     {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.agilite]},
-    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.intelligence]},
+    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.magie]},
     {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attributs: [Attribut.force, Attribut.courage, Attribut.agilite]},
     {... new _Mouvement("manuelVoleur_attaqueSournoise", TypeMouvement.technique, "manuelVoleur")},
 
-    {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique"), attributs: [Attribut.intelligence, Attribut.force]},
+    {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique"), attributs: [Attribut.magie, Attribut.force]},
     {... new _Mouvement("parcheminProjectileMagique_incantation", TypeMouvement.incantation, "parcheminProjectileMagique")},
     {... new _Mouvement("parcheminProtection_sort", TypeMouvement.sort, "parcheminProtection")},
     {... new _Mouvement("parcheminProtection_incantation", TypeMouvement.incantation, "parcheminProtection")},
@@ -652,6 +665,9 @@ window.onload = function() {
                         o.classList.remove(o.getAttribute("tdd-cible"));
                         trouverPreparationDansPosition(POSITION, preparation).cible = null;
                     }
+
+                } else if(objetReference === 'livre') {
+                    // TODO LIVRE
 
                 } else {
                     const objet = trouverObjet(objetReference);
@@ -815,7 +831,7 @@ function dessinerPosition() {
     document.getElementById("attribut-force").innerHTML = String(POSITION.resultat.hero.force);
     document.getElementById("attribut-endurance").innerHTML = String(POSITION.resultat.hero.courage);
     document.getElementById("attribut-vitesse").innerHTML = String(POSITION.resultat.hero.agilite);
-    document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.intelligence);
+    document.getElementById("attribut-mana").innerHTML = String(POSITION.resultat.hero.magie);
 
     // écrire les totaux
     document.getElementById("total-attaque-distance-hero").innerHTML = String(POSITION.resultat.caracteristiqueHero.attaqueDistance);
@@ -847,6 +863,9 @@ function dessinerPosition() {
     }
     for(let i=0; i<POSITION.tresor.nbRunes; i++) {
         tresor.append(ajouterObjet('rune', false, null, null, null));
+    }
+    for(let i=0; i<POSITION.tresor.nbLivres; i++) {
+        tresor.append(ajouterObjet('livre', false, null, null, null));
     }
 
     // dessiner l'inventaire
@@ -937,13 +956,13 @@ function dessinerPosition() {
 
 
 function recalculerAventure() {
-    const inventaire: Inventaire = {objets:[{...trouverObjet("epee")}], nbRunes: 0, nbPotions: 0};
+    const inventaire: Inventaire = {objets:[{...trouverObjet("epee")}], nbRunes: 0, nbPotions: 0, nbLivres: 0};
 
     const hero: Hero = {
         force: 1,
         courage: 1,
         agilite: 1,
-        intelligence: 1
+        magie: 1
     };
 
     const charmes: Charme[] = [];
@@ -953,19 +972,22 @@ function recalculerAventure() {
         // traiter les préparatifs
         const preparations: Preparation[] = [];
         for(let preparation of position.preparations) {
-            if(preparation.type === 'potion' && preparation.cible) {
+            if(preparation.type === TypePreparation.potion && preparation.cible) {
                 preparation.id="potion-"+preparations.length;
                 preparations.push(preparation);
                 if(inventaire.nbPotions > 0) {
                     inventaire.nbPotions --;
                     preparation.status = StatusPreparation.preparation_ok;
-                    hero[preparation.cible]++;
+                    if(preparation.cible === 'force') hero.force ++;
+                    if(preparation.cible === 'endurance') hero.courage ++;
+                    if(preparation.cible === 'vitesse') hero.agilite ++;
+                    if(preparation.cible === 'mana') hero.magie ++;
                 } else {
                     preparation.status = StatusPreparation.preparation_ko;
                 }
             }
 
-            if(preparation.type === 'rune' && preparation.cible) {
+            if(preparation.type === TypePreparation.rune && preparation.cible) {
                 preparation.id="rune-"+preparations.length;
                 preparations.push(preparation);
                 if(inventaire.nbRunes > 0) {
@@ -976,10 +998,23 @@ function recalculerAventure() {
                     preparation.status = StatusPreparation.preparation_ko;
                 }
             }
+
+            if(preparation.type === TypePreparation.livre && preparation.cible) {
+                preparation.id="livre-"+preparations.length;
+                preparations.push(preparation);
+                if(inventaire.nbLivres > 0) {
+                    inventaire.nbLivres --;
+                    preparation.status = StatusPreparation.preparation_ok;
+                    // TODO LIVRE
+                } else {
+                    preparation.status = StatusPreparation.preparation_ko;
+                }
+            }
         }
 
 
         // traitement spécial du charme et de l'enchantement, parce qu'ils utilisent respectivement une potion et une rune
+        // TODO : et si on avait une action qui utilise une livre ??
         let charme_status: StatusMouvement = position.combat.filter(value => value === "manuelMage_charme").length > 0 ? StatusMouvement.mouvement_ok : undefined;
         if(charme_status === StatusMouvement.mouvement_ok) {
             if(inventaire.nbPotions > 0) {
@@ -1005,11 +1040,14 @@ function recalculerAventure() {
         for(let i=0; i<inventaire.nbRunes; i++) {
             preparations.push({cible: null, id: "rune-"+preparations.length, type: TypePreparation.rune, status: StatusPreparation.preparation_ok});
         }
+        for(let i=0; i<inventaire.nbLivres; i++) {
+            preparations.push({cible: null, id: "livre-"+preparations.length, type: TypePreparation.livre, status: StatusPreparation.preparation_ok});
+        }
         position.preparations = preparations;
 
 
         // recopier l'état de l'inventaire, dans l'inventaire de la position
-        position.inventaire = {objets:[...inventaire.objets.map(value => {return{...value};})], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions};
+        position.inventaire = {objets:[...inventaire.objets.map(value => {return{...value};})], nbRunes: inventaire.nbRunes, nbPotions: inventaire.nbPotions, nbLivres: inventaire.nbLivres};
 
         const caracteristique: Caracteristique = {
             attaqueDistance: 0,
@@ -1067,6 +1105,25 @@ function recalculerAventure() {
             }
         }
 
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.poison) > -1) {
+            position.resultat.hero.force = 0;
+        }
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.entrave) > -1) {
+            position.resultat.hero.agilite = 0;
+        }
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1) {
+            position.resultat.hero.magie = 0;
+        }
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.terreur) > -1) {
+            position.resultat.hero.courage = 0;
+        }
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.rapide) > -1) {
+            position.resultat.nbDistanceAutorises --;
+        }
+        if(position.ennemi.specials.indexOf(EnnemiSpecial.lent) > -1) {
+            position.resultat.nbDistanceAutorises ++;
+        }
+
         // resoudre le combat
         for(let mouvement of MOUVEMENTS) {
             if(position.combat.indexOf(mouvement.id) > -1) {
@@ -1092,7 +1149,7 @@ function recalculerAventure() {
                 }
 
                 // vérifier que si on utilise une arme contre un ennemi éthéré, elle est magique
-                if(position.ennemi.ethere && objet.type === TypeObjet.arme && objet.niveau <= 1) {
+                if(position.ennemi.specials.indexOf(EnnemiSpecial.ethere) > -1 && objet.type === TypeObjet.arme && objet.niveau <= 1) {
                     effetMouvement.status = StatusMouvement.mouvement_ko;
                     continue;
                 }
@@ -1112,7 +1169,7 @@ function recalculerAventure() {
                         force: effetMouvement.force,
                         courage: effetMouvement.courage,
                         agilite: effetMouvement.agilite,
-                        intelligence: effetMouvement.intelligence
+                        magie: effetMouvement.magie
                     }
                     charmes.push(charme);
                 }
@@ -1127,7 +1184,7 @@ function recalculerAventure() {
                     effetMouvement.force = 0;
                     effetMouvement.courage = 0;
                     effetMouvement.agilite = 0;
-                    effetMouvement.intelligence = 0;
+                    effetMouvement.magie = 0;
                 }
                 if(enchantement && (effetMouvement.type === TypeMouvement.bloquer || effetMouvement.type === TypeMouvement.frapper)) {
                     fusionnerMouvement(effetMouvement, enchantement);
@@ -1204,6 +1261,7 @@ function recalculerAventure() {
         } else {
             inventaire.nbPotions += position.tresor.nbPotions;
             inventaire.nbRunes += position.tresor.nbRunes;
+            inventaire.nbLivres += position.tresor.nbLivres;
             for(let tresor of position.tresor.objets) {
                 inventaire.objets.push({...tresor});
             }
@@ -1370,7 +1428,7 @@ function ajouterAssiette(mouvement: Mouvement) {
 
         const objet: Objet = trouverObjetDansPosition(POSITION, mouvement.objet);
         const effetMouvement = calculerEffetMouvement(POSITION, mouvement, POSITION.resultat.caracteristiqueHero);
-        if(POSITION.ennemi.ethere && objet.niveau <= 1 && objet.type === TypeObjet.arme) {
+        if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.ethere) > -1 && objet.niveau <= 1 && objet.type === TypeObjet.arme) {
             effetMouvement.status = StatusMouvement.mouvement_ko;
         }
         assiette.append(creerMarqueurs(effetMouvement));
@@ -1511,11 +1569,11 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.intelligence > 0) {
+    if(mouvement.magie > 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-mana");
-        marqueur.innerHTML = "<span>"+String(mouvement.intelligence)+"</span>";
+        marqueur.innerHTML = "<span>"+String(mouvement.magie)+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1527,7 +1585,7 @@ function choisirPosition(id: string) {
     document.getElementById("scene-presentator").classList.add("flipped");
     document.getElementById("presentation").className = "face "+POSITION.presentation;
     let message = "<span>"+POSITION.message+"</span>";
-    if(POSITION.ennemi.ethere) {
+    if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.ethere) > -1) {
         message += "<span class='presentation-alerte'>L'ennemi est éthéré<br>Les armes sans runes n'ont aucun effet sur lui</span>";
     }
     message += "<span class='continue'>-></span>";
@@ -1549,6 +1607,9 @@ function afficherDetails(cible: string) {
             "<p>Vous pouvez faire glisser une rune jusqu'à une arme pour l'améliorer. Vérifiez les détails de l'arme pour vérifier les effet des runes.</p>" +
             "<p>L'effet d'une rune perdure jusqu'à la fin de la partie. N'hesitez pas à ré-utiliser une arme améliorée, dans le plus de combats possibles.</p>" +
             "<p>Une rune est à usage unique. Si vous l'utilisez sur une arme, avant un combat, vous ne pourrez pas l'utiliser ultérieurement sur une autre arme.</p>";
+    } else if (cible === "livre") {
+        details = "LIVRE" +
+            "TODO LIVRE</p>";
     } else {
         const objet: Objet = trouverObjet(cible);
         details = objet.details;
@@ -1562,5 +1623,5 @@ function fusionnerMouvement(cible: Mouvement, ajout: Mouvement) {
     cible.force += ajout.force;
     cible.courage += ajout.courage;
     cible.agilite += ajout.agilite;
-    cible.intelligence += ajout.intelligence;
+    cible.magie += ajout.magie;
 }
