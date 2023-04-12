@@ -281,10 +281,9 @@ body * {
 }
 #pause {
     height: 16em;
-    display: flex;
 }
 #attributs {
-    width: 13vw;
+    width: 20vw;
 }
 #pause-actions {
     width: 13vw;
@@ -524,8 +523,8 @@ body * {
     border-radius: 1em;
     height: 2em;
     display: block;
-    width: 10vw;
-    text-align: right;
+    width: 18vw;
+    text-align: left;
     padding: 0.5em;
     position: relative;
     margin-bottom: 0.5em;
@@ -737,4 +736,46 @@ body * {
     background-size: cover !important;
     top: 1.5em;
     left: -0.5em;
+}
+
+.action.hero-special {
+    height: 5em;
+    width: 5em;
+    opacity: 0.2;
+}
+.action.hero-special.acquis {
+    opacity: 1;
+}
+.hero-special[tdd-special="rapide"] {
+    background-image: url("img/vitesse.png");
+    background-size: cover;
+}
+.hero-special[tdd-special="initie"] {
+    background-image: url("img/mana.png");
+    background-size: cover;
+}
+.hero-special[tdd-special="heroic"] {
+    background-image: url("img/armure.png");
+    background-size: cover;
+}
+.objet[tdd-cible="initie"] {
+    background-image: url("img/mana.png");
+    background-size: cover;
+}
+.objet[tdd-cible="rapide"] {
+    background-image: url("img/vitesse.png");
+    background-size: cover;
+}
+.objet[tdd-cible="heroic"] {
+    background-image: url("img/armure.png");
+    background-size: cover;
+}
+
+.colimateur {
+    background: url(img/coolimateur.png);
+    background-size: contain;
+    width: 2em;
+    height: 2em;
+    display: inline-block;
+    position: absolute;
 }

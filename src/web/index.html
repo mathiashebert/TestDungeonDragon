@@ -38,13 +38,30 @@
             <div class="plateau face">
 
                 <div class="section" id="pause">
-                    <div id="attributs">
-                        <div class="attribut" tdd-attribut="force"><span class="force"></span><span id="attribut-force"></span></div>
-                        <div class="attribut" tdd-attribut="endurance"><span class="endurance"></span><span id="attribut-endurance"></span></div>
-                        <div class="attribut" tdd-attribut="vitesse"><span class="vitesse"></span><span id="attribut-vitesse"></span></div>
-                        <div class="attribut" tdd-attribut="mana"><span class="mana"></span><span id="attribut-mana"></span></div>
-                    </div>
-                    <div id="pause-actions"></div>
+                    <table>
+                        <tr style="height: 8em">
+                            <td rowspan="2">
+                                <div id="attributs">
+                                    <div class="attribut" tdd-attribut="force"><span>Force</span><span id="attribut-force"></span></div>
+                                    <div class="attribut" tdd-attribut="endurance"><span>Courage</span><span id="attribut-endurance"></span></div>
+                                    <div class="attribut" tdd-attribut="vitesse"><span>Agilité</span><span id="attribut-vitesse"></span></div>
+                                    <div class="attribut" tdd-attribut="mana"><span>Magie</span><span id="attribut-mana"></span></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div id="pause-actions"></div>
+                            </td>
+                        </tr>
+                        <tr style="height: 5em">
+                            <td>
+                                <div class="action hero-special" style="height: 5em" tdd-special="rapide"></div>
+                                <div class="action hero-special" style="height: 5em" tdd-special="initie"></div>
+                                <div class="action hero-special" style="height: 5em" tdd-special="heroic"></div>
+                            </td>
+                        </tr>
+                    </table>
+
+
 
                 </div>
 
@@ -67,13 +84,13 @@
 
                 <div class="section" id="total">
                     <div id="caracteristique-hero" class="thumbnail">
-                        <div class="marqueur marqueur-attaque marqueur-attaque-distance"><span id="total-attaque-distance-hero"></span></div>
+                        <div class="marqueur marqueur-attaque marqueur-attaque-distance"><span class="colimateur"></span><span id="total-attaque-distance-hero"></span></div>
                         <div class="marqueur marqueur-attaque"><span id="total-attaque-hero"></span></div>
                         <div class="marqueur marqueur-defense"><span id="total-defense-hero"></span></div>
                     </div>
                     <div id="caracteristique-ennemi">
                         <div class="marqueur marqueur-attaque"><span id="total-attaque-ennemi"></span></div>
-                        <div class="marqueur marqueur-defense"><span id="total-defense-ennemi"></span></div>
+                        <div class="marqueur marqueur-defense"><span class="colimateur"></span><span id="total-defense-ennemi"></span></div>
                     </div>
                 </div>
                 <div class="section" id="resultat">
