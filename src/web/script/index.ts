@@ -37,7 +37,6 @@ interface Position {
     message: string;
     combat: string[]; //ce qui est choisi par l'utilisateur
     mouvements: Mouvement[], // rendu calculé
-    charmes: Charme[], // rendu calculé
     resultat: ResultatCombat;
     success: boolean;
     inventaire: Inventaire;
@@ -97,7 +96,6 @@ enum StatusMouvement {
 enum TypeMouvement {
     technique,
     sort,
-    incantation,
     jeter,
     frapper,
     bloquer
@@ -128,10 +126,6 @@ interface Mouvement extends Valeur {
     type: TypeMouvement;
     objet: string;
     attributs: Attribut[];
-}
-
-interface Charme extends Valeur {
-    duree: number;
 }
 
 interface Inventaire {
@@ -179,7 +173,6 @@ class _Position implements Position {
     inventaire: Inventaire = null;
     message: string = "";
     mouvements: Mouvement[] = [];
-    charmes: Charme[] = [];
     resultat: ResultatCombat = {
         message: "",
         hero: {force: 1, courage: 1, agilite: 1, magie: 1, heroSpecial: {initie: 0, rapide: 0, heroic: 0}},
@@ -231,7 +224,7 @@ class _Mouvement implements Mouvement {
         this.type = type;
         this.objet = objet;
 
-        if(type === TypeMouvement.jeter || type === TypeMouvement.sort || type === TypeMouvement.incantation) {
+        if(type === TypeMouvement.jeter || type === TypeMouvement.sort) {
             this.distance = true;
         }
     }
@@ -804,7 +797,7 @@ function dessinerPosition() {
     pause.innerHTML = '';
     // ecrire la pause
     for(let preparation of POSITION.preparations) {
-        pause.append(ajouterObjet(preparation.type, true, null, preparation, null));
+        pause.append(ajouterObjet(preparation.type, true, null, preparation));
     }
 
     // ecrire les capacité speciales
@@ -846,16 +839,16 @@ function dessinerPosition() {
     const tresor = document.getElementById('tresor');
     tresor.innerHTML = '';
     for(let o of POSITION.tresor.objets) {
-        tresor.append(ajouterObjet(o.id, false, null, null, null));
+        tresor.append(ajouterObjet(o.id, false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbPotions; i++) {
-        tresor.append(ajouterObjet('potion', false, null, null, null));
+        tresor.append(ajouterObjet('potion', false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbRunes; i++) {
-        tresor.append(ajouterObjet('rune', false, null, null, null));
+        tresor.append(ajouterObjet('rune', false, null, null));
     }
     for(let i=0; i<POSITION.tresor.nbLivres; i++) {
-        tresor.append(ajouterObjet('livre', false, null, null, null));
+        tresor.append(ajouterObjet('livre', false, null, null));
     }
 
     // dessiner l'inventaire
@@ -863,7 +856,7 @@ function dessinerPosition() {
     inventaire.innerHTML = '';
     for(let o of POSITION.inventaire.objets) {
         if(o.status === StatusObjet.objet_ok) {
-            inventaire.append(ajouterObjet(o.id, true, null, null, null));
+            inventaire.append(ajouterObjet(o.id, true, null, null));
         }
     }
 
@@ -911,26 +904,15 @@ function dessinerPosition() {
     jeter.innerHTML='';
     frapper.innerHTML='';
 
-    // dessiners les charmes (rituels qui durent plusieurs tours)
-    for(let charme of POSITION.charmes) {
-        if(charme.duree > 0) {
-            const fantome = ajouterObjet(charme.id, false, null, null, charme);
-            document.getElementById( 'sort' ).prepend(fantome);
-        }
-    }
-
-    for(let m of POSITION.combat) {
-        const mouvement: Mouvement = trouverMouvement(m);
-        const effetMouvement: Mouvement = trouverMouvementDansPosition(POSITION, m);
-        const fantome = ajouterObjet(mouvement.objet, true, effetMouvement, null, null);
+    for(let effetMouvement of POSITION.mouvements) {
+        //const mouvement: Mouvement = trouverMouvement(m);
+        //const effetMouvement: Mouvement = trouverMouvementDansPosition(POSITION, m);
+        const fantome = ajouterObjet(effetMouvement.objet, true, effetMouvement, null);
 
         // le type 'bloquer' est ajouté à 'frapper'
-        let type = mouvement.type;
-        if(mouvement.type === TypeMouvement.bloquer) {
+        let type = effetMouvement.type;
+        if(effetMouvement.type === TypeMouvement.bloquer) {
             type = TypeMouvement.frapper;
-        }
-        if(mouvement.type === TypeMouvement.incantation) {
-            type = TypeMouvement.technique;
         }
         document.getElementById( TypeMouvement[type] ).prepend(fantome);
     }
@@ -954,8 +936,6 @@ function recalculerAventure() {
             rapide: 0,
         },
     };
-
-    const charmes: Charme[] = [];
 
     for(let position of POSITIONS) {
 
@@ -1002,27 +982,6 @@ function recalculerAventure() {
                 }
             }
         }
-
-
-        // traitement spécial du charme et de l'enchantement, parce qu'ils utilisent respectivement une potion et une rune
-        // TODO : et si on avait une action qui utilise une livre ??
-        let charme_status: StatusMouvement = position.combat.filter(value => value === "manuelMage_charme").length > 0 ? StatusMouvement.mouvement_ok : undefined;
-        if(charme_status === StatusMouvement.mouvement_ok) {
-            if(inventaire.nbPotions > 0) {
-                inventaire.nbPotions --;
-            } else {
-                charme_status = StatusMouvement.mouvement_ko;
-            }
-        }
-        let enchantement_status: StatusMouvement = position.combat.filter(value => value === "manuelMage_enchantement").length > 0 ? StatusMouvement.mouvement_ok : undefined;
-        if(enchantement_status === StatusMouvement.mouvement_ok) {
-            if(inventaire.nbRunes > 0) {
-                inventaire.nbRunes --;
-            } else {
-                enchantement_status = StatusMouvement.mouvement_ko;
-            }
-        }
-        let enchantement: Mouvement = undefined;
 
 
         for(let i=0; i<inventaire.nbPotions; i++) {
@@ -1074,36 +1033,31 @@ function recalculerAventure() {
             jeter: 0,
             frapper: 0,
             bloquer: 0,
-            incantation: 0,
         }
 
         position.mouvements = [];
 
-        // traiter les charmes
-        position.charmes = [];
-        for(let charme of charmes) {
-            if(charme.duree > 0) {
-                position.charmes.push({...charme});
-                charme.duree--;
-
-                caracteristique.attaqueTotale += charme.attaque;
-                if(charme.distance) {
-                    caracteristique.attaqueDistance += charme.attaque;
-                }
-            }
-        }
         if(hero.heroSpecial.rapide > 0) {
             position.resultat.nbDistanceAutorises ++;
         }
         if(hero.heroSpecial.initie > 0) {
             position.resultat.nbSortAutorises += 3;
         }
-        if(hero.heroSpecial.initie > 1) {
-            position.resultat.hero.magie += 2;
-        }
+
+
         if(hero.heroSpecial.heroic > 0) {
             position.resultat.hero.force ++;
             position.resultat.hero.courage ++;
+        }
+
+        // effet automatique : le familier du magicien
+        let familier: Mouvement = null;
+        if(hero.heroSpecial.initie >= 2) {
+            familier = new _Mouvement("familierDuMagicien", TypeMouvement.technique,"familierDuMagicien");
+        }
+
+        if(hero.heroSpecial.initie >= 3) {
+            position.resultat.hero.magie += 2;
         }
 
         if(position.ennemi.specials.indexOf(EnnemiSpecial.rapide) > -1) {
@@ -1144,11 +1098,6 @@ function recalculerAventure() {
                 // on compte le nombre d'utilisation de chaque type
                 utilisations[ TypeMouvement[mouvement.type] ] ++;
 
-                // on améliore le niveau du livre
-                if(mouvement.type === TypeMouvement.technique) {
-                    trouverObjetDansInventaire(inventaire, mouvement.objet).niveau ++ ;
-                }
-
                 if(effetMouvement.feu) {
                     ennemi.attaqueTotale -= effetMouvement.attaque;
                 }
@@ -1160,6 +1109,22 @@ function recalculerAventure() {
                     position.resultat.nbSortAutorises += (objet.niveau-1);
                 }
 
+                if(effetMouvement.type === TypeMouvement.sort && familier != null) {
+                    fusionnerMouvement(familier, effetMouvement);
+                }
+
+            }
+        }
+
+        if(familier != null) {
+            const effetMouvement = calculerEffetMouvement(position, familier, caracteristique);
+            position.mouvements.push(effetMouvement);
+            caracteristique.attaqueTotale += effetMouvement.attaque;
+            if(effetMouvement.distance) {
+                caracteristique.attaqueDistance += effetMouvement.attaque;
+            }
+            if(effetMouvement.feu) {
+                ennemi.attaqueTotale -= effetMouvement.attaque;
             }
         }
 
@@ -1272,14 +1237,7 @@ function trouverMouvement(id: string): Mouvement {
     }
     return null;
 }
-function trouverMouvementDansPosition(position: Position, id: string): Mouvement {
-    for(let mouvement of position.mouvements) {
-        if(mouvement.id === id) {
-            return mouvement;
-        }
-    }
-    return null;
-}
+
 function trouverPreparationDansPosition(position: Position, id: string) {
     for(let mouvement of position.preparations) {
         if(mouvement.id === id) {
@@ -1289,17 +1247,17 @@ function trouverPreparationDansPosition(position: Position, id: string) {
     return null;
 }
 
-function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement, preparation: Preparation, charme: Charme): HTMLDivElement {
+function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement, preparation: Preparation): HTMLDivElement {
     const fantome = document.createElement('div');
     fantome.classList.add("action");
     fantome.classList.add("fantome");
-    if(mouvement?.type === TypeMouvement.incantation) {
-        fantome.classList.add("incantation");
-    }
     const objet = document.createElement('div');
     objet.classList.add('objet');
     objet.classList.add(classe);
     objet.setAttribute("tdd-objet", classe);
+    if(mouvement && mouvement.type === TypeMouvement.technique) {
+        deplacable = false;
+    }
     if(deplacable) {
         objet.classList.add('deplacable');
     }
@@ -1320,14 +1278,6 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
             objet.setAttribute("tdd-cible", preparation.cible);
         }
         if(preparation.status !== StatusPreparation.preparation_ok) {
-            objet.classList.add('error');
-        }
-    }
-    if(charme) {
-        // ajouter les marqueurs indicatifs visuels du mouvement
-        fantome.append(creerMarqueurs(charme));
-
-        if(charme.status !== StatusMouvement.mouvement_ok) {
             objet.classList.add('error');
         }
     }
@@ -1363,10 +1313,6 @@ function ajouterAssiette(mouvement: Mouvement) {
         if(mouvement.type === TypeMouvement.bloquer) {
             type = TypeMouvement.frapper;
         }
-        if(mouvement.type === TypeMouvement.incantation) {
-            type = TypeMouvement.technique;
-            assiette.classList.add('incantation');
-        }
         document.getElementById( TypeMouvement[type] ).prepend(assiette);
 
         const objet: Objet = trouverObjetDansPosition(POSITION, mouvement.objet);
@@ -1396,7 +1342,7 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
 
     const hero: Hero = position.resultat.hero;
     const objet: Objet = trouverObjetDansPosition(position, mouvement.objet);
-    const niveau : number = objet.niveau;
+    const niveau : number = objet ? objet.niveau : 1;
 
     const effetMouvement: Mouvement = {...mouvement};
 
@@ -1539,8 +1485,12 @@ function afficherDetails(cible: string) {
 }
 
 function fusionnerMouvement(cible: Mouvement, ajout: Mouvement) {
-    cible.force += ajout.force;
-    cible.courage += ajout.courage;
-    cible.agilite += ajout.agilite;
-    cible.magie += ajout.magie;
+    for(let a of ajout.attributs) {
+        if(cible.attributs.indexOf(a) === -1) {
+            cible.attributs.push(a);
+        }
+    }
+
+    cible.feu = cible.feu || ajout.feu;
+    cible.glace = cible.glace || ajout.glace;
 }

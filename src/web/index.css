@@ -671,6 +671,11 @@ body * {
     background-size: contain;
     background-repeat: no-repeat;
 }
+.familierDuMagicien {
+    background-image: url("img/faucon.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
 
 .error {
     border: solid 2px red;
@@ -784,7 +789,7 @@ body * {
 }
 
 .colimateur {
-    background: url(img/coolimateur.png);
+    background: url("img/coolimateur.png");
     background-size: contain;
     width: 2em;
     height: 2em;
