@@ -119,6 +119,10 @@ interface Valeur {
     courage: number;
     agilite: number;
     magie: number;
+
+    glace: boolean;
+    feu: boolean;
+
 }
 interface Mouvement extends Valeur {
     type: TypeMouvement;
@@ -145,7 +149,7 @@ enum Attribut {
 
 enum EnnemiSpecial {
     poison,
-    entrave,
+    vif,
     terreur,
     antisort,
     lent,
@@ -153,10 +157,10 @@ enum EnnemiSpecial {
     ethere
 }
 
-enum HeroSpecial {
-    rapide,
-    initie,
-    heroic,
+interface HeroSpecial {
+    rapide: number,
+    initie: number,
+    heroic: number,
 }
 
 interface Hero {
@@ -165,7 +169,7 @@ interface Hero {
     agilite: number;
     magie: number;
 
-    specials: HeroSpecial[];
+    heroSpecial: HeroSpecial;
 }
 
 class _Position implements Position {
@@ -178,7 +182,7 @@ class _Position implements Position {
     charmes: Charme[] = [];
     resultat: ResultatCombat = {
         message: "",
-        hero: {force: 1, courage: 1, agilite: 1, magie: 1, specials: []},
+        hero: {force: 1, courage: 1, agilite: 1, magie: 1, heroSpecial: {initie: 0, rapide: 0, heroic: 0}},
         caracteristiqueHero: {attaqueTotale: 0, attaqueDistance: 0},
         caracteristiqueEnnemi: {attaqueTotale: 0, attaqueDistance: 0},
         nbDistanceAutorises: 0,
@@ -218,6 +222,9 @@ class _Mouvement implements Mouvement {
     courage: number = 0;
     force: number = 0;
     magie: number = 0;
+
+    glace: boolean = false;
+    feu: boolean = false;
 
     constructor(id: string, type: TypeMouvement, objet: string) {
         this.id = id;
@@ -290,7 +297,7 @@ const OBJETS: Objet[] = [
     {
         ... new _Objet("hacheDeGlace", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["hacheDeGlace_jeter", "hacheDeGlace_bloquer"],
+        mouvements: ["hacheDeGlace_jeter", "hacheDeGlace_frapper"],
         details: "LA HACHE DE GLACE" +
             "<p>La hache de glace est une arme magique.</p>" +
             "<p>Elle peut être jetée, dans ce cas elle apporte une attaque de 1 majorée par la force du héro, et chaque rune ajoute encore 1 à l'attaque.</p>" +
@@ -309,7 +316,7 @@ const OBJETS: Objet[] = [
     {
         ... new _Objet("hacheDeFeu", TypeObjet.arme),
         niveau: 1,
-        mouvements: ["hacheDeFeu_jeter", "hacheDeFeu_bloquer"],
+        mouvements: ["hacheDeFeu_jeter", "hacheDeFeu_frapper"],
         details: "LA HACHE DE FEU" +
             "<p>La hache de feu est une arme magique.</p>" +
             "<p>Elle peut être jetée, dans ce cas elle apporte une attaque de 1 majorée par la force du héro, et chaque rune ajoute encore 1 à l'attaque.</p>" +
@@ -335,83 +342,49 @@ const OBJETS: Objet[] = [
     },
 
     {
-        ... new _Objet("manuelAventurier", TypeObjet.livre),
-        mouvements: ["manuelAventurier_concentration", "manuelAventurier_reflexes", "manuelAventurier_positionDefensive", "manuelAventurier_positionAggressive"],
-        details: "LE MANUEL DE L'AVENTURIER" +
-            "<p>Le manuel de l'aventurier est un livre expliquant toutes les tratégies de bases, pour survivre dans un dongeon.</p>" +
-            "<p>Il est assez polyvalent, et vous permettra de vous adapter à chaque situation, en vous apportant au choix 1 en attaque, en defense, en vitesse, ou en mana.</p>" +
-            "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>"
-    },
-    {
-        ... new _Objet("manuelBarbare", TypeObjet.livre),
-        mouvements: ["manuelBarbare_baston"],
-        details: "LE MANUEL DU BARBARE" +
-            "<p>Le manuel du barabre est un livre simple, avec principalement des illustrations. Il explique clairement des méthodes de combat primitives, mais efficaces, qui ont fait leur preuves au cours des âges, comme par exemple \"frapper fort\".</p>" +
-            "<p>Choisir cette stratégie vous apporte une attaque de 3, une défense de 3 et une vitesse de 3.</p>" +
-            "<p>Cependant, un barabre ne s'interesse qu'à la baston, il ne s'occupe pas de ramasser les objets à la fin du combat. Donc lorsque vous utilisez cette stratégie, vous ne gagnez pas de récompense de combat, et vous ne récupérez pas les armes que vous avez jetées.</p>" +
-            "<p>Autre contrainte : il n'est pas possible de lancer de sort quand vous choisissez une stratégie barbare.</p>" +
-            "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>"
-    },
-    {
-        ... new _Objet("manuelMage", TypeObjet.livre),
-        mouvements: ["manuelMage_charme", "manuelMage_enchantement"],
-        details: "LE MANUEL DU MAGE" +
-            "<p>Le manuel du mage est un livre compliqué, regorgeant d'inctantations et de techniques magiques en tout genre.</p>" +
-            "<p>Avec le manuel du mage, vous pouvez réaliser un rituel. Pour cela vous devez depenser une potion. Vous choisissez un ou plusieurs parchemins (sans limite), et vous les combinez en un sort unique. L'effet du rituel dure autant de tours que le nombre d'utilisations du livre.</p>" +
-            "<p>Vous pouvez réaliser un enchantement. Pour cela vous devez en plus dépenser une rune. L'effet de l'enchantement se dissipe à la fin du combat. L'effet de l'enchantement est appliqué à une arme (ce qui la rend très puissante, si l'enchantement a un effet de feu ou de glace (vor les deux).</p>" +
-            "<p>Lorsque vous utilisez le manuel du mage, les parchemins (choisis pour le rituel ou l'enchantement) ne sont pas perdus.</p>" +
-            "<p>Comme les autres livres, plus vous l'utilisez, plus il sera efficace !</p>" +
-            "<p>Par contre, vous ne disposez qu'une seule main libre au corps à corps, lorsque vous utilisez le manuel du mage</p>"
-    },
-    {
-        ... new _Objet("manuelVoleur", TypeObjet.livre),
-        mouvements: ["manuelVoleur_attaqueSournoise"],
-        details: "LE MANUEL DU VOLEUR" +
-            "<p>Le manuel du voleur est un livre détaillant avec précision comment se faufiller dans un dongeon ou derrière un ennemi... et faire ce qu'il faut !</p>" +
-            "<p>Le manuel du voleur vous donne dla possibilité de faire une attaque sournoise. L'avantage principale est que votre attaque est doublée !</p>" +
-            "<p>Vous ne pouvez pas utiliser de parchemin, ni de bouclier</p>" +
-            "<p>Vous avez automatiquement la possibilité de jeter une (et une seule arme), quelque soit votre vitesse ou celle de l'adversaire</p>" +
-            "<p>La première fois que vous faites une attaque sournoise, vous ne pouvez utiliser qu'une seule arme. La deuxième fois, vous pouvez en utiliser deux (etc...)</p>"
-    },
-
-    {
         ... new _Objet("parcheminProjectileMagique", TypeObjet.parchemin),
-        mouvements: ["parcheminProjectileMagique_sort", "parcheminProjectileMagique_incantation"],
+        mouvements: ["parcheminProjectileMagique_sort"],
         details: "PARCHEMIN DE \"PROJECTILE MAGIQUE\"" +
             "<p>Le sort \"projectile magique\", est un sort simple, qui permet de faire une attaque à distance, égale à la valeur de mana disponible.</p>" +
             "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminProtection", TypeObjet.parchemin),
-        mouvements: ["parcheminProtection_sort", "parcheminProtection_incantation"],
+        mouvements: ["parcheminProtection_sort"],
         details: "PARCHEMIN DE \"PROTECTION\"" +
             "<p>Le sort \"protection\", est un sort défensif, qui apporte une défense égale à la valeur de mana disponible.</p>" +
             "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminMurDeGlace", TypeObjet.parchemin),
-        mouvements: ["parcheminMurDeGlace_sort", "parcheminMurDeGlace_incantation"],
+        mouvements: ["parcheminMurDeGlace_sort"],
         details: "PARCHEMIN DE \"MUR DE GLACE\"" +
             "<p>Le sort \"mur de glace\", est un sort défensif, qui apporte une défense égale à la valeur de mana disponible divisée par deux, et qui diminue l'attaque de l'ennemi d'autant (si l'attaque de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
             "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminBouleDeFeu", TypeObjet.parchemin),
-        mouvements: ["parcheminBouleDeFeu_sort", "parcheminBouleDeFeu_incantation"],
+        mouvements: ["parcheminBouleDeFeu_sort"],
         details: "PARCHEMIN DE \"BOULE DE FEU\"" +
             "<p>Le sort \"boule de feu\", est un sort offensif, qui apporte une attaque égale à la valeur de mana disponible divisée par deux, et qui diminue la defense de l'ennemi d'autant (si la défense de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
             "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
     {
         ... new _Objet("parcheminRapidite", TypeObjet.parchemin),
-        mouvements: ["parcheminRapidite_sort", "parcheminRapidite_incantation"],
+        mouvements: ["parcheminRapidite_sort"],
         details: "PARCHEMIN \"RAPIDITÉ\"" +
             "<p>Le sort \"rapidité\", est un sort utilitaire, qui apporte une vitesse égale à la valeur de mana disponible.</p>" +
             "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
     },
+    {
+        ... new _Objet("batonDeMagicien", TypeObjet.arme),
+        mouvements: ["batonDeMagicien_frapper"],
+        details: "BÂTON DE MAGICIEN" +
+            "<p>Le bâton de magicien est une arme spéciale. Lorsque vous l'utilisez, il permet de lancer 1 sort supplémentaire, pour chaque rune gravée dessus</p>"
+    },
 ]
 
-let POSITION_DECOUVERTE:number = 0; // commence à 0
+let POSITION_DECOUVERTE:number = 9; // commence à 0
 
 const POSITIONS: Position[] = [
     {
@@ -429,7 +402,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-2"),
         message: "Vous sortez dans la court, où un épouvantail terrifiant est posé.",
-        tresor: {objets:[trouverObjet("parcheminProjectileMagique"), /*trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")*/], nbPotions: 1, nbRunes:1, nbLivres: 1},
+        tresor: {objets:[trouverObjet("parcheminProjectileMagique")], nbPotions: 1, nbRunes:1, nbLivres: 1},
         ennemi: {
             nom: "l'épouvantail",
             attaqueTotale: 3,
@@ -477,7 +450,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-6"),
         message: "Vous entrez dans la cuisine. Une vieille sorcière s'occupe d'un chaudron fumant",
-        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("manuelMage")], nbPotions: 2, nbRunes:0, nbLivres: 0},
+        tresor: {objets:[trouverObjet("hacheDeGlace"), trouverObjet("bouclierDeGlace"), trouverObjet("parcheminMurDeGlace"), trouverObjet("batonDeMagicien")], nbPotions: 2, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "la sorcière",
             attaqueTotale: 35,
@@ -489,19 +462,19 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-7"),
         message: "Vous descendez à la cave. Une ghoule vous aperçoit, et avance vers vous... lentement...",
-        tresor: {objets:[trouverObjet("manuelBarbare")], nbPotions: 0, nbRunes:2, nbLivres: 0},
+        tresor: {objets:[], nbPotions: 0, nbRunes:2, nbLivres: 0},
         ennemi: {
             nom: "la ghoule",
             attaqueTotale: 10,
             attaqueDistance: 10,
-            specials: [EnnemiSpecial.lent, EnnemiSpecial.poison]
+            specials: [EnnemiSpecial.lent, EnnemiSpecial.poison, EnnemiSpecial.terreur]
         },
         presentation: "ghoul",
     },
     {
         ... new _Position("position-8"),
         message: "Vous croisez un bonhomme poilu, qui se transforme d'un coup en loup-garoup !",
-        tresor: {objets:[trouverObjet("manuelVoleur")], nbPotions: 0, nbRunes:0, nbLivres: 0},
+        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "le loup-garou",
             attaqueTotale: 15,
@@ -518,7 +491,7 @@ const POSITIONS: Position[] = [
             nom: "la banshee",
             attaqueTotale: 30,
             attaqueDistance: 30,
-            specials: [EnnemiSpecial.ethere]
+            specials: [EnnemiSpecial.ethere, EnnemiSpecial.antisort]
         },
         presentation: "banshee",
     },
@@ -541,26 +514,12 @@ const POSITIONS: Position[] = [
 let POSITION: Position = POSITIONS[0];
 
 const MOUVEMENTS: Mouvement[] = [
-    {... new _Mouvement("manuelAventurier_positionAggressive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.force]},
-    {... new _Mouvement("manuelAventurier_positionDefensive", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.courage]},
-    {... new _Mouvement("manuelAventurier_reflexes", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.agilite]},
-    {... new _Mouvement("manuelAventurier_concentration", TypeMouvement.technique, "manuelAventurier"), attributs: [Attribut.magie]},
-    {... new _Mouvement("manuelBarbare_baston", TypeMouvement.technique, "manuelBarbare"), attributs: [Attribut.force, Attribut.courage, Attribut.agilite]},
-    {... new _Mouvement("manuelVoleur_attaqueSournoise", TypeMouvement.technique, "manuelVoleur")},
 
     {... new _Mouvement("parcheminProjectileMagique_sort", TypeMouvement.sort, "parcheminProjectileMagique"), attributs: [Attribut.magie]},
-    {... new _Mouvement("parcheminProjectileMagique_incantation", TypeMouvement.incantation, "parcheminProjectileMagique")},
     {... new _Mouvement("parcheminProtection_sort", TypeMouvement.sort, "parcheminProtection"), attributs: [Attribut.magie, Attribut.courage]},
-    {... new _Mouvement("parcheminProtection_incantation", TypeMouvement.incantation, "parcheminProtection")},
-    {... new _Mouvement("parcheminMurDeGlace_sort", TypeMouvement.sort, "parcheminMurDeGlace")},
-    {... new _Mouvement("parcheminMurDeGlace_incantation", TypeMouvement.incantation, "parcheminMurDeGlace")},
-    {... new _Mouvement("parcheminBouleDeFeu_sort", TypeMouvement.sort, "parcheminBouleDeFeu")},
-    {... new _Mouvement("parcheminBouleDeFeu_incantation", TypeMouvement.incantation, "parcheminBouleDeFeu")},
+    {... new _Mouvement("parcheminMurDeGlace_sort", TypeMouvement.sort, "parcheminMurDeGlace"), attributs: [Attribut.magie], glace: true},
+    {... new _Mouvement("parcheminBouleDeFeu_sort", TypeMouvement.sort, "parcheminBouleDeFeu"), attributs: [Attribut.magie], feu: true},
     {... new _Mouvement("parcheminRapidite_sort", TypeMouvement.sort, "parcheminRapidite"), attributs: [Attribut.agilite, Attribut.magie]},
-    {... new _Mouvement("parcheminRapidite_incantation", TypeMouvement.incantation, "parcheminRapidite")},
-
-    {... new _Mouvement("manuelMage_charme", TypeMouvement.technique, "manuelMage"), distance: true},
-    {... new _Mouvement("manuelMage_enchantement", TypeMouvement.technique, "manuelMage")},
 
     {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attributs: [Attribut.force, Attribut.courage]},
     {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attributs: [Attribut.force, Attribut.agilite]},
@@ -568,13 +527,17 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("bouclier_bloquer", TypeMouvement.bloquer, "bouclier"), attributs: [Attribut.courage]},
     {... new _Mouvement("dagueRunique_jeter", TypeMouvement.jeter, "dagueRunique"), attributs: [Attribut.agilite]},
     {... new _Mouvement("dagueRunique_frapper", TypeMouvement.frapper, "dagueRunique"), attributs: [Attribut.agilite]},
-    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace")},
-    {... new _Mouvement("hacheDeGlace_bloquer", TypeMouvement.frapper, "hacheDeGlace")},
-    {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace")},
-    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu")},
-    {... new _Mouvement("hacheDeFeu_bloquer", TypeMouvement.frapper, "hacheDeFeu")},
-    {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu")},
+    {... new _Mouvement("hacheDeGlace_jeter", TypeMouvement.jeter, "hacheDeGlace"), attributs: [Attribut.force], glace: true},
+    {... new _Mouvement("hacheDeGlace_frapper", TypeMouvement.frapper, "hacheDeGlace"), attributs: [Attribut.force], glace: true},
+    {... new _Mouvement("bouclierDeGlace_bloquer", TypeMouvement.bloquer, "bouclierDeGlace"), attributs: [Attribut.courage], glace: true},
+    {... new _Mouvement("hacheDeFeu_jeter", TypeMouvement.jeter, "hacheDeFeu"), attributs: [Attribut.force], feu: true},
+    {... new _Mouvement("hacheDeFeu_frapper", TypeMouvement.frapper, "hacheDeFeu"), attributs: [Attribut.force], feu: true},
+    {... new _Mouvement("bouclierDeFeu_bloquer", TypeMouvement.bloquer, "bouclierDeFeu"), attributs: [Attribut.courage], feu: true},
     {... new _Mouvement("javelot_jeter", TypeMouvement.jeter, "javelot"), attributs: [Attribut.force, Attribut.courage, Attribut.agilite]},
+
+    {... new _Mouvement("batonDeMagicien_frapper", TypeMouvement.frapper, "batonDeMagicien"), attributs: [Attribut.magie]},
+
+
 
 ]
 
@@ -695,11 +658,6 @@ window.onload = function() {
                             if(o.getAttribute("tdd-mouvement") === mouvement.id) {
                                 ajouterAssiette(null); // si le mouvement est déjà celui selectionné, on ajoute l'assiette dans l'inventaire
                             } else {
-                                // on ne propose les assiettes des incantation, que si on utlise le manuel du mage
-                                if(mouvement.type === TypeMouvement.incantation && POSITION.mouvements.filter(value => value.objet === "manuelMage").length == 0) {
-                                    continue;
-                                }
-
                                 ajouterAssiette(mouvement); // sinon on ajoute l'assiette normalement
                             }
                         }
@@ -852,7 +810,7 @@ function dessinerPosition() {
     // ecrire les capacité speciales
     const specials = document.getElementsByClassName("hero-special");
     for(let i= 0; i<specials.length; i++) {
-        if(POSITION.resultat.hero.specials.indexOf(HeroSpecial[specials.item(i).getAttribute("tdd-special")]) === -1)
+        if(POSITION.resultat.hero.heroSpecial[specials.item(i).getAttribute("tdd-special")] === 0)
             specials.item(i).classList.remove("acquis");
         else
             specials.item(i).classList.add("acquis");
@@ -931,12 +889,6 @@ function dessinerPosition() {
     } else {
         document.getElementById("marqueur-sort").classList.remove("marqueur-error");
     }
-    document.getElementById("marqueur-technique-text").innerHTML = String(POSITION.resultat.nbTechniqueAutorises);
-    if(POSITION.resultat.nbTechnique > POSITION.resultat.nbTechniqueAutorises) {
-        document.getElementById("marqueur-technique").classList.add("marqueur-error");
-    } else {
-        document.getElementById("marqueur-technique").classList.remove("marqueur-error");
-    }
 
     if(POSITION.resultat.attaqueTotalSuccess) {
         document.querySelector("#caracteristique-hero .marqueur-attaque:not(.marqueur-attaque-distance)").classList.add("marqueur-success");
@@ -996,7 +948,11 @@ function recalculerAventure() {
         agilite: 1,
         magie: 1,
 
-        specials: [],
+        heroSpecial: {
+            initie: 0,
+            heroic: 0,
+            rapide: 0,
+        },
     };
 
     const charmes: Charme[] = [];
@@ -1036,11 +992,11 @@ function recalculerAventure() {
             if(preparation.type === TypePreparation.livre && preparation.cible) {
                 preparation.id="livre-"+preparations.length;
                 preparations.push(preparation);
-                const cible = HeroSpecial[preparation.cible];
-                if(inventaire.nbLivres > 0 && hero.specials.indexOf(cible) === -1) {
+                const cible = preparation.cible;
+                if(inventaire.nbLivres > 0 && hero.heroSpecial[cible] < 3) {
                     inventaire.nbLivres --;
                     preparation.status = StatusPreparation.preparation_ok;
-                    hero.specials.push(cible);
+                    hero.heroSpecial[cible] ++;
                 } else {
                     preparation.status = StatusPreparation.preparation_ko;
                 }
@@ -1123,9 +1079,6 @@ function recalculerAventure() {
 
         position.mouvements = [];
 
-        const baston = position.combat.filter(value => value === "manuelBarbare_baston").length > 0;
-        const attaqueSournoise = position.combat.filter(value => value === "manuelVoleur_attaqueSournoise").length > 0;
-
         // traiter les charmes
         position.charmes = [];
         for(let charme of charmes) {
@@ -1139,33 +1092,20 @@ function recalculerAventure() {
                 }
             }
         }
-        if(hero.specials.indexOf(HeroSpecial.rapide) > -1) {
+        if(hero.heroSpecial.rapide > 0) {
             position.resultat.nbDistanceAutorises ++;
         }
-        if(hero.specials.indexOf(HeroSpecial.initie) > -1) {
+        if(hero.heroSpecial.initie > 0) {
             position.resultat.nbSortAutorises += 3;
         }
-        if(hero.specials.indexOf(HeroSpecial.heroic) > -1) {
+        if(hero.heroSpecial.initie > 1) {
+            position.resultat.hero.magie += 2;
+        }
+        if(hero.heroSpecial.heroic > 0) {
             position.resultat.hero.force ++;
             position.resultat.hero.courage ++;
         }
-        if(position.combat.indexOf("parcheminRapidite_sort") > -1) {
-            position.resultat.nbDistanceAutorises ++;
-        }
 
-
-        if(position.ennemi.specials.indexOf(EnnemiSpecial.poison) > -1) {
-            position.resultat.hero.force = 0;
-        }
-        if(position.ennemi.specials.indexOf(EnnemiSpecial.entrave) > -1) {
-            position.resultat.hero.agilite = 0;
-        }
-        if(position.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1) {
-            position.resultat.hero.magie = 0;
-        }
-        if(position.ennemi.specials.indexOf(EnnemiSpecial.terreur) > -1) {
-            position.resultat.hero.courage = 0;
-        }
         if(position.ennemi.specials.indexOf(EnnemiSpecial.rapide) > -1) {
             position.resultat.nbDistanceAutorises --;
         }
@@ -1190,53 +1130,10 @@ function recalculerAventure() {
                 // enlever les objets utilisés de l'inventaire
                 objet.status = StatusObjet.objet_ko;
 
-                // cas spécial des incantations : elles ne sont pas ajoutées à la caractéristiques
-                // car elles sont prise en compte directement dans le manuel
-                if(mouvement.type === TypeMouvement.incantation) {
-                    utilisations[ TypeMouvement[mouvement.type] ] ++;
-                    continue;
-                }
-
                 // vérifier que si on utilise une arme contre un ennemi éthéré, elle est magique
                 if(position.ennemi.specials.indexOf(EnnemiSpecial.ethere) > -1 && objet.type === TypeObjet.arme && objet.niveau <= 1) {
                     effetMouvement.status = StatusMouvement.mouvement_ko;
                     continue;
-                }
-
-                // cas special du manuel du mage : charme qui necessite une potion
-                if(mouvement.id === "manuelMage_charme" && charme_status === StatusMouvement.mouvement_ko) {
-                    effetMouvement.status = StatusMouvement.mouvement_ko;
-                    continue;
-                }
-                if(mouvement.id === "manuelMage_charme") {
-                    const charme: Charme = {
-                        id: 'charme',
-                        attaque: effetMouvement.attaque,
-                        distance: true,
-                        duree: objet.niveau,
-                        status: StatusMouvement.mouvement_ok,
-                        force: effetMouvement.force,
-                        courage: effetMouvement.courage,
-                        agilite: effetMouvement.agilite,
-                        magie: effetMouvement.magie
-                    }
-                    charmes.push(charme);
-                }
-                // cas special du manuel du mage : enchantement qui necessite une rune
-                if(mouvement.id === "manuelMage_enchantement" && enchantement_status === StatusMouvement.mouvement_ko) {
-                    effetMouvement.status = StatusMouvement.mouvement_ko;
-                    continue;
-                }
-                if(mouvement.id === "manuelMage_enchantement") {
-                    enchantement = {...effetMouvement};
-                    effetMouvement.attaque = 0;
-                    effetMouvement.force = 0;
-                    effetMouvement.courage = 0;
-                    effetMouvement.agilite = 0;
-                    effetMouvement.magie = 0;
-                }
-                if(enchantement && (effetMouvement.type === TypeMouvement.bloquer || effetMouvement.type === TypeMouvement.frapper)) {
-                    fusionnerMouvement(effetMouvement, enchantement);
                 }
 
                 caracteristique.attaqueTotale += effetMouvement.attaque;
@@ -1252,10 +1149,16 @@ function recalculerAventure() {
                     trouverObjetDansInventaire(inventaire, mouvement.objet).niveau ++ ;
                 }
 
-                // les parchemins sont à usage unique
-                //if(objet.type === TypeObjet.parchemin) {
-                //    trouverObjetDansInventaire(inventaire, objet.id).status = StatusObjet.objet_ko;
-                //}
+                if(effetMouvement.feu) {
+                    ennemi.attaqueTotale -= effetMouvement.attaque;
+                }
+
+                if(effetMouvement.id === "parcheminRapidite_sort") {
+                    position.resultat.nbDistanceAutorises ++;
+                }
+                if(effetMouvement.id === "batonDeMagicien_frapper") {
+                    position.resultat.nbSortAutorises += (objet.niveau-1);
+                }
 
             }
         }
@@ -1299,21 +1202,12 @@ function recalculerAventure() {
         }
 
 
-        // récupérer le trésor (seulement si on n'a pas de baston)
-        // si on est bastpn, on ne récupère même pas ce qu'on a lancé
-        if(baston) {
-            for(let mouvement of position.mouvements) {
-                if(mouvement.type === TypeMouvement.jeter) {
-                    trouverObjetDansInventaire(inventaire, mouvement.objet).status = StatusObjet.objet_ko;
-                }
-            }
-        } else {
-            inventaire.nbPotions += position.tresor.nbPotions;
-            inventaire.nbRunes += position.tresor.nbRunes;
-            inventaire.nbLivres += position.tresor.nbLivres;
-            for(let tresor of position.tresor.objets) {
-                inventaire.objets.push({...tresor});
-            }
+        // récupérer le trésor
+        inventaire.nbPotions += position.tresor.nbPotions;
+        inventaire.nbRunes += position.tresor.nbRunes;
+        inventaire.nbLivres += position.tresor.nbLivres;
+        for(let tresor of position.tresor.objets) {
+            inventaire.objets.push({...tresor});
         }
 
 
@@ -1440,7 +1334,7 @@ function ajouterObjet(classe: string, deplacable: boolean, mouvement: Mouvement,
 
     const reference: Objet = trouverObjetDansPosition(POSITION, classe);
     if(reference) {
-        objet.classList.add('arme');
+        objet.classList.add(reference.type);
         if(reference.niveau !== 1) {
             const marqueurs = document.createElement('div');
             marqueurs.classList.add("marqueurs");
@@ -1510,49 +1404,23 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
         effetMouvement[Attribut[attribut]] += hero[Attribut[attribut]] * niveau;
     }
 
-/*
-    // effets speciaux
-    switch (mouvement.id) {
-        case "parcheminProjectileMagique_sort":
-        case "parcheminProjectileMagique_incantation":
-            effetMouvement.attaque = caracteristique.mana;
-            break;
-        case "parcheminProtection_sort":
-        case "parcheminProtection_incantation":
-            effetMouvement.defense = caracteristique.mana;
-            break;
-        case "parcheminMurDeGlace_sort":
-        case "parcheminMurDeGlace_incantation":
-            effetMouvement.defense = Math.floor(caracteristique.mana/2);
-            effetMouvement.glace = true;
-            break;
-        case "parcheminBouleDeFeu_sort":
-        case "parcheminBouleDeFeu_incantation":
-            effetMouvement.attaque = Math.floor(caracteristique.mana/2);
-            effetMouvement.feu = true;
-            break;
-        case "parcheminRapidite_sort":
-        case "parcheminRapidite_incantation":
-            effetMouvement.vitesse = caracteristique.mana;
-            break;
-
-        case "manuelMage_charme":
-        case "manuelMage_enchantement":
-            position.mouvements.filter(value => value.type === TypeMouvement.incantation).forEach(value => {
-                fusionnerMouvement(effetMouvement, value)
-            });
-            break;
-    }*/
-/*
-    if(caracteristique.sournois) {
-        effetMouvement.attaque *= 2;
-        effetMouvement.defense *= 2;
-        effetMouvement.mana *= 2;
-        effetMouvement.vitesse *= 2;
-    }*/
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.poison) > -1 && !effetMouvement.glace) {
+        effetMouvement.force *= -1;
+    }
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.vif) > -1 && !effetMouvement.glace) {
+        effetMouvement.agilite *= -1;
+    }
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1 && !effetMouvement.glace) {
+        effetMouvement.magie *= -1;
+    }
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.terreur) > -1 && !effetMouvement.glace) {
+        effetMouvement.courage *= -1;
+    }
 
     for(let attribut of mouvement.attributs) {
-        effetMouvement.attaque += effetMouvement[Attribut[attribut]];
+        if(effetMouvement[Attribut[attribut]] > 0) {
+            effetMouvement.attaque += effetMouvement[Attribut[attribut]];
+        }
     }
 
     return effetMouvement;
@@ -1562,59 +1430,40 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
     const marqueurs = document.createElement('div');
     marqueurs.classList.add("marqueurs");
 
-    // marqueur specifique pour le manuel du mage: charme
-    if(mouvement.id === "manuelMage_charme") {
-        const marqueur = document.createElement('div');
-        marqueur.classList.add("marqueur");
-        marqueur.classList.add("marqueur-charme");
-        marqueurs.append(marqueur);
-    }
-    // marqueur specifique pour le manuel du mage: enchantement
-    if(mouvement.id === "manuelMage_enchantement") {
-        const marqueur = document.createElement('div');
-        marqueur.classList.add("marqueur");
-        marqueur.classList.add("marqueur-enchantement");
-        marqueurs.append(marqueur);
-    }
-
     if(mouvement.status === StatusMouvement.mouvement_ko) {
         return marqueurs;
     }
-/*
-    if(mouvement.glace) {
-        const marqueur = document.createElement('div');
-        marqueur.classList.add("marqueur");
-        marqueur.classList.add("marqueur-glace");
-        marqueurs.append(marqueur);
-    }
-    if(mouvement.feu) {
-        const marqueur = document.createElement('div');
-        marqueur.classList.add("marqueur");
-        marqueur.classList.add("marqueur-feu");
-        marqueurs.append(marqueur);
-    }
-*/
-    if(mouvement.force > 0) {
+
+    if(mouvement.force != 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-attaque");
-        marqueur.innerHTML = "<span>"+String(mouvement.force)+"</span>";
+        if(mouvement.force < 0) {
+            marqueur.classList.add("ignore");
+        }
+        marqueur.innerHTML = "<span>"+String(Math.abs(mouvement.force))+"</span>";
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.courage > 0) {
+    if(mouvement.courage != 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-defense");
-        marqueur.innerHTML = "<span>"+String(mouvement.courage)+"</span>";
+        if(mouvement.courage < 0) {
+            marqueur.classList.add("ignore");
+        }
+        marqueur.innerHTML = "<span>"+String(Math.abs(mouvement.courage))+"</span>";
         marqueurs.append(marqueur);
     }
 
-    if(mouvement.agilite > 0) {
+    if(mouvement.agilite != 0) {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-vitesse");
-        marqueur.innerHTML = "<span>"+String(mouvement.agilite)+"</span>";
+        if(mouvement.agilite < 0) {
+            marqueur.classList.add("ignore");
+        }
+        marqueur.innerHTML = "<span>"+String(Math.abs(mouvement.agilite))+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1622,7 +1471,10 @@ function creerMarqueurs(mouvement: Valeur): HTMLDivElement {
         const marqueur = document.createElement('div');
         marqueur.classList.add("marqueur");
         marqueur.classList.add("marqueur-mana");
-        marqueur.innerHTML = "<span>"+String(mouvement.magie)+"</span>";
+        if(mouvement.magie < 0) {
+            marqueur.classList.add("ignore");
+        }
+        marqueur.innerHTML = "<span>"+String(Math.abs(mouvement.magie))+"</span>";
         marqueurs.append(marqueur);
     }
 
@@ -1646,8 +1498,8 @@ function choisirPosition(id: string) {
     if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1) {
         message += "<span class='presentation-alerte'>Antisort : votre magie est réduite à 0 face à cet ennemi</span>";
     }
-    if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.entrave) > -1) {
-        message += "<span class='presentation-alerte'>Entraves : votre agilite est réduite à 0 face à cet ennemi</span>";
+    if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.vif) > -1) {
+        message += "<span class='presentation-alerte'>Vif : votre agilite est réduite à 0 face à cet ennemi</span>";
     }
     if(POSITION.ennemi.specials.indexOf(EnnemiSpecial.rapide) > -1) {
         message += "<span class='presentation-alerte'>Rapide : vous avez une attaque à distance de moins face à cet ennemi</span>";
