@@ -155,6 +155,16 @@ interface HeroSpecial {
     rapide: number,
     initie: number,
     heroic: number,
+
+    protecteur: boolean,
+}
+
+class _HeroSpecial implements HeroSpecial {
+    rapide: number = 0;
+    initie: number = 0;
+    heroic: number = 0;
+
+    protecteur: boolean = false;
 }
 
 interface Hero {
@@ -175,7 +185,7 @@ class _Position implements Position {
     mouvements: Mouvement[] = [];
     resultat: ResultatCombat = {
         message: "",
-        hero: {force: 1, courage: 1, agilite: 1, magie: 1, heroSpecial: {initie: 0, rapide: 0, heroic: 0}},
+        hero: {force: 1, courage: 1, agilite: 1, magie: 1, heroSpecial: new _HeroSpecial()},
         caracteristiqueHero: {attaqueTotale: 0, attaqueDistance: 0},
         caracteristiqueEnnemi: {attaqueTotale: 0, attaqueDistance: 0},
         nbDistanceAutorises: 0,
@@ -338,36 +348,43 @@ const OBJETS: Objet[] = [
         ... new _Objet("parcheminProjectileMagique", TypeObjet.parchemin),
         mouvements: ["parcheminProjectileMagique_sort"],
         details: "PARCHEMIN DE \"PROJECTILE MAGIQUE\"" +
-            "<p>Le sort \"projectile magique\", est un sort simple, qui permet de faire une attaque à distance, égale à la valeur de mana disponible.</p>" +
-            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
+            "<p></p>" +
+            "<p></p>"
     },
     {
         ... new _Objet("parcheminProtection", TypeObjet.parchemin),
         mouvements: ["parcheminProtection_sort"],
         details: "PARCHEMIN DE \"PROTECTION\"" +
-            "<p>Le sort \"protection\", est un sort défensif, qui apporte une défense égale à la valeur de mana disponible.</p>" +
-            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
+            "<p></p>" +
+            "<p></p>"
     },
     {
         ... new _Objet("parcheminMurDeGlace", TypeObjet.parchemin),
         mouvements: ["parcheminMurDeGlace_sort"],
         details: "PARCHEMIN DE \"MUR DE GLACE\"" +
-            "<p>Le sort \"mur de glace\", est un sort défensif, qui apporte une défense égale à la valeur de mana disponible divisée par deux, et qui diminue l'attaque de l'ennemi d'autant (si l'attaque de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
-            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
+            "<p></p>" +
+            "<p></p>"
     },
     {
         ... new _Objet("parcheminBouleDeFeu", TypeObjet.parchemin),
         mouvements: ["parcheminBouleDeFeu_sort"],
         details: "PARCHEMIN DE \"BOULE DE FEU\"" +
-            "<p>Le sort \"boule de feu\", est un sort offensif, qui apporte une attaque égale à la valeur de mana disponible divisée par deux, et qui diminue la defense de l'ennemi d'autant (si la défense de l'ennemi est réduite à 0 ou moins, il est éliminé)</p>" +
-            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
+            "<p></p>" +
+            "<p></p>"
     },
     {
         ... new _Objet("parcheminRapidite", TypeObjet.parchemin),
         mouvements: ["parcheminRapidite_sort"],
         details: "PARCHEMIN \"RAPIDITÉ\"" +
-            "<p>Le sort \"rapidité\", est un sort utilitaire, qui apporte une vitesse égale à la valeur de mana disponible.</p>" +
-            "<p>Il n'y a pas de limite au nombre de parchemins que vous pouvez utiliser lors d'un combat. Cependant les parchemins sont des objets à usage unique. Lorsque vous en utilisez un, il ne sera plus disponible pour les ennemis suivants.</p>"
+            "<p></p>" +
+            "<p></p>"
+    },
+    {
+        ... new _Objet("parcheminSoin", TypeObjet.parchemin),
+        mouvements: ["parcheminSoin_sort"],
+        details: "PARCHEMIN \"SOIN\"" +
+            "<p></p>" +
+            "<p></p>"
     },
     {
         ... new _Objet("batonDeMagicien", TypeObjet.arme),
@@ -431,7 +448,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-5"),
         message: "Vous entrez dans le manoir. Le hall est rempli de zombies, qui se dirigent alors vers vous... lentement...",
-        tresor: {objets:[trouverObjet("parcheminRapidite")], nbPotions: 0, nbRunes:0, nbLivres: 0},
+        tresor: {objets:[trouverObjet("parcheminRapidite")], nbPotions: 0, nbRunes:0, nbLivres: 1},
         ennemi: {
             nom: "le zombie",
             attaqueTotale: 30,
@@ -455,7 +472,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-7"),
         message: "Vous descendez à la cave. Une ghoule vous aperçoit, et avance vers vous... lentement...",
-        tresor: {objets:[], nbPotions: 0, nbRunes:2, nbLivres: 0},
+        tresor: {objets:[trouverObjet("parcheminSoin")], nbPotions: 0, nbRunes:2, nbLivres: 0},
         ennemi: {
             nom: "la ghoule",
             attaqueTotale: 10,
@@ -467,7 +484,7 @@ const POSITIONS: Position[] = [
     {
         ... new _Position("position-8"),
         message: "Vous croisez un bonhomme poilu, qui se transforme d'un coup en loup-garoup !",
-        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0, nbLivres: 0},
+        tresor: {objets:[trouverObjet("hacheDeFeu"), trouverObjet("bouclierDeFeu"), trouverObjet("parcheminBouleDeFeu")], nbPotions: 0, nbRunes:0, nbLivres: 2},
         ennemi: {
             nom: "le loup-garou",
             attaqueTotale: 15,
@@ -494,8 +511,8 @@ const POSITIONS: Position[] = [
         tresor: {objets:[], nbPotions: 0, nbRunes:0, nbLivres: 0},
         ennemi: {
             nom: "le vampire",
-            attaqueTotale: 30,
-            attaqueDistance: 30,
+            attaqueTotale: 40,
+            attaqueDistance: 50,
             specials: []
         },
         presentation: "vampire",
@@ -513,6 +530,7 @@ const MOUVEMENTS: Mouvement[] = [
     {... new _Mouvement("parcheminMurDeGlace_sort", TypeMouvement.sort, "parcheminMurDeGlace"), attributs: [Attribut.magie], glace: true},
     {... new _Mouvement("parcheminBouleDeFeu_sort", TypeMouvement.sort, "parcheminBouleDeFeu"), attributs: [Attribut.magie], feu: true},
     {... new _Mouvement("parcheminRapidite_sort", TypeMouvement.sort, "parcheminRapidite"), attributs: [Attribut.agilite, Attribut.magie]},
+    {... new _Mouvement("parcheminSoin_sort", TypeMouvement.sort, "parcheminSoin"), attributs: [Attribut.force, Attribut.magie]},
 
     {... new _Mouvement("epee_frapper", TypeMouvement.frapper, "epee"), attributs: [Attribut.force, Attribut.courage]},
     {... new _Mouvement("lance_frapper", TypeMouvement.frapper, "lance"), attributs: [Attribut.force, Attribut.agilite]},
@@ -800,7 +818,7 @@ function dessinerPosition() {
         pause.append(ajouterObjet(preparation.type, true, null, preparation));
     }
 
-    // ecrire les capacité speciales
+    // ecrire les capacités speciales
     const specials = document.getElementsByClassName("hero-special");
     for(let i= 0; i<specials.length; i++) {
         if(POSITION.resultat.hero.heroSpecial[specials.item(i).getAttribute("tdd-special")] === 0)
@@ -930,11 +948,7 @@ function recalculerAventure() {
         agilite: 1,
         magie: 1,
 
-        heroSpecial: {
-            initie: 0,
-            heroic: 0,
-            rapide: 0,
-        },
+        heroSpecial: new _HeroSpecial()
     };
 
     for(let position of POSITIONS) {
@@ -1040,14 +1054,30 @@ function recalculerAventure() {
         if(hero.heroSpecial.rapide > 0) {
             position.resultat.nbDistanceAutorises ++;
         }
-        if(hero.heroSpecial.initie > 0) {
-            position.resultat.nbSortAutorises += 3;
-        }
 
-
-        if(hero.heroSpecial.heroic > 0) {
+        // voie "PALADIN"
+        if(hero.heroSpecial.heroic >= 1) {
             position.resultat.hero.force ++;
             position.resultat.hero.courage ++;
+        }
+
+        let charge: Mouvement = null;
+        if(hero.heroSpecial.heroic >= 2) {
+            position.resultat.hero.force ++;
+            charge = new _Mouvement("charge", TypeMouvement.technique,"charge");
+            charge.attributs.push(Attribut.force);
+        }
+
+        position.resultat.hero.heroSpecial.protecteur = false;
+        if(hero.heroSpecial.heroic >= 3) {
+            if(position.combat.filter(value => value.indexOf("bouclier") > -1).length === 1) {
+                position.resultat.hero.heroSpecial.protecteur = true;
+            }
+        }
+
+        // voie "MAGE"
+        if(hero.heroSpecial.initie > 0) {
+            position.resultat.nbSortAutorises += 3;
         }
 
         // effet automatique : le familier du magicien
@@ -1090,21 +1120,11 @@ function recalculerAventure() {
                     continue;
                 }
 
-                caracteristique.attaqueTotale += effetMouvement.attaque;
-                if(effetMouvement.distance) {
-                    caracteristique.attaqueDistance += effetMouvement.attaque;
-                }
+                appliquerMouvement(effetMouvement, caracteristique, ennemi);
 
                 // on compte le nombre d'utilisation de chaque type
                 utilisations[ TypeMouvement[mouvement.type] ] ++;
 
-                if(effetMouvement.feu) {
-                    ennemi.attaqueTotale -= effetMouvement.attaque;
-                }
-
-                if(effetMouvement.id === "parcheminRapidite_sort") {
-                    position.resultat.nbDistanceAutorises ++;
-                }
                 if(effetMouvement.id === "batonDeMagicien_frapper") {
                     position.resultat.nbSortAutorises += (objet.niveau-1);
                 }
@@ -1119,13 +1139,12 @@ function recalculerAventure() {
         if(familier != null) {
             const effetMouvement = calculerEffetMouvement(position, familier, caracteristique);
             position.mouvements.push(effetMouvement);
-            caracteristique.attaqueTotale += effetMouvement.attaque;
-            if(effetMouvement.distance) {
-                caracteristique.attaqueDistance += effetMouvement.attaque;
-            }
-            if(effetMouvement.feu) {
-                ennemi.attaqueTotale -= effetMouvement.attaque;
-            }
+            appliquerMouvement(effetMouvement, caracteristique, ennemi);
+        }
+        if(charge != null) {
+            const effetMouvement = calculerEffetMouvement(position, charge, caracteristique);
+            position.mouvements.push(effetMouvement);
+            appliquerMouvement(effetMouvement, caracteristique, ennemi);
         }
 
         position.resultat.nbMelee = utilisations.frapper + utilisations.bloquer;
@@ -1342,7 +1361,11 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
 
     const hero: Hero = position.resultat.hero;
     const objet: Objet = trouverObjetDansPosition(position, mouvement.objet);
-    const niveau : number = objet ? objet.niveau : 1;
+    let niveau : number = objet ? objet.niveau : 1;
+
+    if(hero.heroSpecial.protecteur && mouvement.id.indexOf("bouclier") > -1) {
+        niveau *= 2;
+    }
 
     const effetMouvement: Mouvement = {...mouvement};
 
@@ -1350,16 +1373,21 @@ function calculerEffetMouvement(position: Position, mouvement: Mouvement, caract
         effetMouvement[Attribut[attribut]] += hero[Attribut[attribut]] * niveau;
     }
 
-    if(position.ennemi.specials.indexOf(EnnemiSpecial.poison) > -1 && !effetMouvement.glace) {
+    const poisonImmune = effetMouvement.glace || position.combat.indexOf("parcheminSoin_sort") > -1;
+    const vifImmune = effetMouvement.glace || position.combat.indexOf("parcheminRapidite_sort") > -1;
+    const antisortImmune = effetMouvement.glace;
+    const terreurImmune = effetMouvement.glace || position.combat.indexOf("parcheminProtection_sort") > -1;
+
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.poison) > -1 && !poisonImmune) {
         effetMouvement.force *= -1;
     }
-    if(position.ennemi.specials.indexOf(EnnemiSpecial.vif) > -1 && !effetMouvement.glace) {
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.vif) > -1 && !vifImmune) {
         effetMouvement.agilite *= -1;
     }
-    if(position.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1 && !effetMouvement.glace) {
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.antisort) > -1 && !antisortImmune) {
         effetMouvement.magie *= -1;
     }
-    if(position.ennemi.specials.indexOf(EnnemiSpecial.terreur) > -1 && !effetMouvement.glace) {
+    if(position.ennemi.specials.indexOf(EnnemiSpecial.terreur) > -1 && !terreurImmune) {
         effetMouvement.courage *= -1;
     }
 
@@ -1493,4 +1521,14 @@ function fusionnerMouvement(cible: Mouvement, ajout: Mouvement) {
 
     cible.feu = cible.feu || ajout.feu;
     cible.glace = cible.glace || ajout.glace;
+}
+
+function appliquerMouvement(effetMouvement: Mouvement, caracteristique: Caracteristique, ennemi: Caracteristique) {
+    caracteristique.attaqueTotale += effetMouvement.attaque;
+    if(effetMouvement.distance) {
+        caracteristique.attaqueDistance += effetMouvement.attaque;
+    }
+    if(effetMouvement.feu) {
+        ennemi.attaqueTotale -= effetMouvement.attaque;
+    }
 }

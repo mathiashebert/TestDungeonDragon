@@ -666,6 +666,11 @@ body * {
     background-size: contain;
     background-repeat: no-repeat;
 }
+.parcheminSoin {
+    background-image: url("img/soin.jpeg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
 .batonDeMagicien {
     background-image: url("img/staff.png");
     background-size: contain;
@@ -795,4 +800,9 @@ body * {
     height: 2em;
     display: inline-block;
     position: absolute;
+}
+
+.hero-special .marqueurs .marqueur-niveau {
+    top: 3em;
+    left: 1em;
 }
